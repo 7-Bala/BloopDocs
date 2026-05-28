@@ -29,6 +29,69 @@ const SUPPORTED_NODES: FormatNode[] = [
 export default function FormatOrbit() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
+  // Render high-fidelity realistic page elements based on format type
+  const renderFileContent = (node: FormatNode) => {
+    const isSpreadsheet = ["XLSX", "NUMBERS", "CSV"].includes(node.ext);
+    const isPresentation = ["PPTX", "KEY"].includes(node.ext);
+
+    if (isSpreadsheet) {
+      return (
+        <div className="pt-3 px-2 flex flex-col gap-[1.5px] w-full z-0 select-none opacity-25 pointer-events-none">
+          {/* Mini Spreadsheet Grid rows representing cells */}
+          <div className="flex gap-[1.5px]">
+            <div className="w-full h-2 border" style={{ borderColor: node.nativeColor }} />
+            <div className="w-full h-2 border" style={{ borderColor: node.nativeColor }} />
+            <div className="w-full h-2 border" style={{ borderColor: node.nativeColor }} />
+          </div>
+          <div className="flex gap-[1.5px]">
+            <div className="w-full h-2 border" style={{ borderColor: node.nativeColor }} />
+            <div className="w-full h-2 border" style={{ borderColor: node.nativeColor }} />
+            <div className="w-full h-2 border" style={{ borderColor: node.nativeColor }} />
+          </div>
+          <div className="flex gap-[1.5px]">
+            <div className="w-full h-2 border" style={{ borderColor: node.nativeColor }} />
+            <div className="w-full h-2 border" style={{ borderColor: node.nativeColor }} />
+            <div className="w-full h-2 border" style={{ borderColor: node.nativeColor }} />
+          </div>
+        </div>
+      );
+    }
+
+    if (isPresentation) {
+      return (
+        <div className="pt-3 px-2 z-0 select-none opacity-25 pointer-events-none w-full">
+          {/* Mini Presentation Slide frame */}
+          <div 
+            className="w-full h-[28px] border-[1.5px] flex items-center justify-center p-1 rounded-sm" 
+            style={{ borderColor: node.nativeColor }}
+          >
+            <div className="flex gap-1 items-center justify-center w-full">
+              {/* Slide chart and content shapes inside */}
+              <div 
+                className="w-2.5 h-2.5 shrink-0 border" 
+                style={{ borderColor: node.nativeColor, backgroundColor: node.nativeColor }} 
+              />
+              <div className="flex-1 flex flex-col gap-0.5">
+                <div className="w-full h-[1.5px]" style={{ backgroundColor: node.nativeColor }} />
+                <div className="w-[60%] h-[1.5px]" style={{ backgroundColor: node.nativeColor }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Default: horizontal content lines for PDF, DOCX, PAGES, TXT, RTF
+    return (
+      <div className="pt-3 px-2.5 space-y-1.5 z-0 select-none opacity-25 pointer-events-none">
+        <div className="w-[80%] h-[1.5px]" style={{ backgroundColor: node.nativeColor }} />
+        <div className="w-[90%] h-[1.5px]" style={{ backgroundColor: node.nativeColor }} />
+        <div className="w-[60%] h-[1.5px]" style={{ backgroundColor: node.nativeColor }} />
+        <div className="w-[75%] h-[1.5px]" style={{ backgroundColor: node.nativeColor }} />
+      </div>
+    );
+  };
+
   return (
     <section 
       id="orbit-section" 
@@ -85,24 +148,20 @@ export default function FormatOrbit() {
                   className="relative w-[60px] h-[76px] bg-white border-2 transition-all duration-200 mb-4 overflow-hidden flex flex-col justify-between"
                   style={{
                     borderColor: node.nativeColor,
-                    // Folded corner clip-path
-                    clipPath: "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%)"
+                    // Folded corner clip-path (slanted folding angle)
+                    clipPath: "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%)"
                   }}
                 >
                   {/* Folded corner triangle decoration inside */}
                   <div 
-                    className="absolute top-0 right-0 w-[12px] h-[12px] bg-[#FAFAFA] border-b-2 border-l-2 z-10"
+                    className="absolute top-0 right-0 w-[10px] h-[10px] bg-[#FAFAFA] border-b-2 border-l-2 z-10"
                     style={{
                       borderColor: node.nativeColor,
                     }}
                   />
 
-                  {/* Aesthetic document lines representing content lines in a real file */}
-                  <div className="pt-4 px-3 space-y-1 z-0 select-none opacity-20 pointer-events-none">
-                    <div className="w-[80%] h-[1.5px]" style={{ backgroundColor: node.nativeColor }} />
-                    <div className="w-[90%] h-[1.5px]" style={{ backgroundColor: node.nativeColor }} />
-                    <div className="w-[60%] h-[1.5px]" style={{ backgroundColor: node.nativeColor }} />
-                  </div>
+                  {/* Render dynamic realistic page decorations based on format category */}
+                  {renderFileContent(node)}
 
                   {/* Horizontal Colored Branding Banner in the bottom-middle of the sheet */}
                   <div 
