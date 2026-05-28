@@ -41,9 +41,11 @@ export default function HandwrittenTitle() {
     }
 
     let tl: gsap.core.Timeline;
+    let active = true;
 
     // Wait until all fonts are loaded so getBBox() measures final Caveat font size, not fallbacks
     document.fonts.ready.then(() => {
+      if (!active) return;
       // 1. Measure the exact SVG bounding boxes of both text elements dynamically
       const convertBBox = textConvert.getBBox();
       const anythingBBox = textAnything.getBBox();
@@ -147,6 +149,7 @@ export default function HandwrittenTitle() {
     });
 
     return () => {
+      active = false;
       if (tl) tl.kill();
     };
   }, []);
