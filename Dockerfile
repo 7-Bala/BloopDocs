@@ -17,7 +17,7 @@ WORKDIR /app
 # 1. Install dependencies only when needed
 FROM base AS deps
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 # 2. Rebuild the source code only when needed
 FROM base AS builder
