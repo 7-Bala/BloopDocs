@@ -34,7 +34,7 @@ RUN npm run build
 # 3. Production image, copy all the files and run next
 FROM base AS runner
 ENV NODE_ENV production
-ENV PORT 3000
+ENV PORT 7860
 ENV NEXT_TELEMETRY_DISABLED 1
 
 # Create a non-root system user for secure isolated container execution
@@ -49,7 +49,7 @@ COPY --from=builder /app/package.json ./package.json
 
 USER nextjs
 
-EXPOSE 3000
+EXPOSE 7860
 
 # Start server
 CMD ["npm", "start"]
