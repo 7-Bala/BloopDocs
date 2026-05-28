@@ -161,45 +161,103 @@ export default function HandwrittenTitle() {
           Anything.
         </text>
 
-        {/* Slanted Golden & Crimson Calligraphic Fountain Pen */}
+        {/* Slanted Golden & Crimson Calligraphic Fountain Pen + Luxurious Right Hand */}
         <g
           ref={penRef}
           style={{ display: "none", transformOrigin: "0px 0px" }}
         >
           {/* Tilted pen group slanted at a natural writing angle (-35 degrees) */}
           <g transform="rotate(-35)">
-            {/* Pen Barrel (sleek dark crimson body) */}
+            {/* 1. Golden Nib (Highly detailed two-tone gold) */}
             <path
-              d="M -8 -26 L -6 -140 L 6 -140 L 8 -26 Z"
-              fill="#903635"
-              stroke="#862937"
-              strokeWidth="2"
-              strokeLinejoin="round"
-            />
-            {/* Gold accents / band */}
-            <rect x="-8.5" y="-32" width="17" height="6" fill="#B9A071" stroke="#862937" strokeWidth="1" />
-            <rect x="-6.5" y="-132" width="13" height="6" fill="#B9A071" stroke="#862937" strokeWidth="1" />
-            
-            {/* Pen Collar (black/burgundy grip section) */}
-            <path
-              d="M -8 -20 L -6 -26 L 6 -26 L 8 -20 Z"
-              fill="#5a1823"
-              stroke="#862937"
-              strokeWidth="1.5"
-            />
-            
-            {/* Golden Nib */}
-            <path
-              d="M 0 0 L -3 -8 L -6 -20 L 6 -20 L 3 -8 Z"
+              d="M 0 0 L -4 -10 L -8 -25 L 8 -25 L 4 -10 Z"
               fill="#C4B883"
               stroke="#862937"
               strokeWidth="1.5"
               strokeLinejoin="round"
             />
+            {/* Gold nib center inlay */}
+            <path
+              d="M 0 -2 C -2 -6, -4 -12, -4 -18 L 4 -18 C 4 -12, 2 -6, 0 -2 Z"
+              fill="#B9A071"
+              stroke="#862937"
+              strokeWidth="1"
+            />
+            {/* Nib slit and breather hole */}
+            <line x1="0" y1="0" x2="0" y2="-15" stroke="#862937" strokeWidth="1" />
+            <circle cx="0" cy="-15" r="1.2" fill="#862937" />
+
+            {/* 2. Grip Section (sleek black with gold cap threads) */}
+            <path
+              d="M -8 -25 L -7 -45 L 7 -45 L 8 -25 Z"
+              fill="#222"
+              stroke="#862937"
+              strokeWidth="1.5"
+            />
+            <rect x="-8.5" y="-27" width="17" height="2" fill="#B9A071" />
+            <rect x="-7.5" y="-45" width="15" height="3" fill="#B9A071" />
+
+            {/* 3. Pen Barrel (Luxurious deep black and gold) */}
+            <path
+              d="M -7 -45 L -5 -150 L 5 -150 L 7 -45 Z"
+              fill="#111"
+              stroke="#862937"
+              strokeWidth="2"
+            />
             
-            {/* Nib Slit & Breather Hole */}
-            <line x1="0" y1="0" x2="0" y2="-12" stroke="#862937" strokeWidth="1" />
-            <circle cx="0" cy="-12" r="1" fill="#862937" />
+            {/* Gold Barrel Rings & Luxury Details */}
+            <rect x="-6.5" y="-55" width="13" height="4" fill="#B9A071" />
+            <rect x="-5.5" y="-142" width="11" height="6" fill="#B9A071" />
+            <path d="M 0 -55 L 0 -135" stroke="#B9A071" strokeWidth="0.8" strokeDasharray="3,3" />
+
+            {/* 4. Elegant Right Hand holding the pen (perfectly color-themed beige/red) */}
+            <g>
+              {/* Middle Finger (curves under the pen barrel) */}
+              <path
+                d="M -7 -40 C -15 -42, -22 -35, -22 -25 C -22 -15, -12 -12, -4 -20"
+                fill="#C4B883"
+                stroke="#862937"
+                strokeWidth="2"
+                strokeLinejoin="round"
+              />
+              
+              {/* Thumb (grips the left side of the grip section) */}
+              <path
+                d="M -6 -28 C -18 -26, -26 -16, -24 -6 C -22 4, -10 6, -2 -14"
+                fill="#B9A071"
+                stroke="#862937"
+                strokeWidth="2"
+                strokeLinejoin="round"
+              />
+              
+              {/* Index Finger (grips the right/top side of the grip section) */}
+              <path
+                d="M 6 -32 C 16 -34, 30 -28, 32 -14 C 34 0, 24 6, 12 -18"
+                fill="#B9A071"
+                stroke="#862937"
+                strokeWidth="2"
+                strokeLinejoin="round"
+              />
+
+              {/* Back of the Hand & Palm (extends down-right) */}
+              <path
+                d="M 32 -14 C 44 -12, 54 4, 48 24 C 42 44, 18 44, 8 24 C 2 12, 8 2, 12 -18"
+                fill="#C4B883"
+                stroke="#862937"
+                strokeWidth="2"
+                strokeLinejoin="round"
+              />
+
+              {/* Sleeve / Cuff (luxury crimson jacket sleeve with gold cufflink) */}
+              <path
+                d="M 48 24 C 54 26, 78 50, 78 50 L 58 70 C 58 70, 38 44, 42 44 Z"
+                fill="#862937"
+                stroke="#862937"
+                strokeWidth="2"
+              />
+              {/* Golden Cufflink */}
+              <circle cx="56" cy="46" r="3" fill="#B9A071" stroke="#862937" strokeWidth="1" />
+            </g>
           </g>
         </g>
       </svg>
