@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Cpu, Zap, Eye, AlertCircle } from "lucide-react";
+import { Cpu, Zap, Eye } from "lucide-react";
 
 interface FormatNode {
   ext: string;
@@ -27,7 +27,9 @@ const SUPPORTED_NODES: FormatNode[] = [
 ];
 
 export default function FormatOrbit() {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [activeIndex, setActiveIndex] = useState<number>(0); // Default to PDF (index 0)
+
+  const activeNode = SUPPORTED_NODES[activeIndex];
 
   return (
     <section 
@@ -56,19 +58,18 @@ export default function FormatOrbit() {
         {/* Static Document Card Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 w-full mb-10">
           {SUPPORTED_NODES.map((node, index) => {
-            const isHovered = hoveredIndex === index;
+            const isActive = activeIndex === index;
             return (
               <div
                 key={node.ext}
-                onMouseEnter={() => setHoveredIndex(index)}
-                onMouseLeave={() => setHoveredIndex(null)}
+                onMouseEnter={() => setActiveIndex(index)}
                 className={`flex flex-col items-center justify-center p-5 border-2 select-none cursor-pointer transition-all duration-200 ${
-                  isHovered ? "bg-white translate-x-[-2px] translate-y-[-2px]" : "bg-white"
+                  isActive ? "bg-white translate-x-[-2px] translate-y-[-2px]" : "bg-white"
                 }`}
                 style={{
                   borderColor: node.nativeColor,
                   color: node.nativeColor,
-                  boxShadow: isHovered 
+                  boxShadow: isActive 
                     ? `6px 6px 0px 0px ${node.nativeColor}` 
                     : `4px 4px 0px 0px ${node.nativeColor}`
                 }}
@@ -77,7 +78,7 @@ export default function FormatOrbit() {
                 <div className="relative w-14 h-18 flex items-center justify-center mb-3">
                   <svg 
                     viewBox="0 0 24 24" 
-                    className={`absolute inset-0 w-full h-full stroke-[1.8] fill-[#FAFAFA] transition-colors duration-200`}
+                    className="absolute inset-0 w-full h-full stroke-[1.8] fill-[#FAFAFA] transition-colors duration-200"
                     style={{ stroke: node.nativeColor }}
                     strokeLinecap="round" 
                     strokeLinejoin="round"
@@ -107,76 +108,65 @@ export default function FormatOrbit() {
           })}
         </div>
 
-        {/* Dynamic Tooltip Detail Card */}
+        {/* Dynamic Tooltip Detail Card (Always populated, no placeholder!) */}
         <div className="w-full min-h-[160px] flex items-center justify-center">
-          {hoveredIndex !== null ? (
-            (() => {
-              const node = SUPPORTED_NODES[hoveredIndex];
-              return (
-                <div 
-                  className="w-full p-6 border-4 bg-white animate-fade-in flex flex-col md:flex-row items-center justify-between gap-6"
-                  style={{ 
-                    borderColor: node.nativeColor, 
-                    boxShadow: `6px 6px 0px 0px ${node.nativeColor}`
-                  }}
+          <div 
+            key={activeNode.ext}
+            className="w-full p-6 border-4 bg-white animate-fade-in flex flex-col md:flex-row items-center justify-between gap-6"
+            style={{ 
+              borderColor: activeNode.nativeColor, 
+              boxShadow: `6px 6px 0px 0px ${activeNode.nativeColor}`
+            }}
+          >
+            <div className="space-y-2 text-center md:text-left flex-1">
+              <div className="flex flex-col md:flex-row items-center gap-3">
+                <h4 
+                  className="text-lg font-black flex items-center gap-2"
+                  style={{ color: activeNode.nativeColor }}
                 >
-                  <div className="space-y-2 text-center md:text-left flex-1">
-                    <div className="flex flex-col md:flex-row items-center gap-3">
-                      <h4 
-                        className="text-lg font-black flex items-center gap-2"
-                        style={{ color: node.nativeColor }}
-                      >
-                        {node.name}
-                        <span 
-                          className="text-[10px] px-2.5 py-0.5 border-2 font-black tracking-widest uppercase shadow-[2px_2px_0px_0px_currentColor]"
-                          style={{ 
-                            borderColor: node.nativeColor, 
-                            color: node.nativeColor,
-                            backgroundColor: `${node.nativeColor}15`
-                          }}
-                        >
-                          {node.ext}
-                        </span>
-                      </h4>
-                    </div>
-                    <p className="text-xs text-slate-700 font-medium leading-relaxed max-w-lg normal-case">
-                      {node.desc}
-                    </p>
-                  </div>
-                  
-                  {/* Metrics block */}
-                  <div 
-                    className="flex gap-4 border-t md:border-t-0 md:border-l-2 border-dashed pt-6 md:pt-0 md:pl-6 w-full md:w-auto shrink-0 justify-around select-none"
-                    style={{ borderColor: node.nativeColor }}
+                  {activeNode.name}
+                  <span 
+                    className="text-[10px] px-2.5 py-0.5 border-2 font-black tracking-widest uppercase shadow-[2px_2px_0px_0px_currentColor]"
+                    style={{ 
+                      borderColor: activeNode.nativeColor, 
+                      color: activeNode.nativeColor,
+                      backgroundColor: `${activeNode.nativeColor}15`
+                    }}
                   >
-                    <div className="text-center min-w-[70px]">
-                      <div className="text-[8px] text-slate-500 uppercase tracking-widest font-black mb-1.5">Fidelity</div>
-                      <div 
-                        className="text-sm font-black flex items-center justify-center gap-1"
-                        style={{ color: node.nativeColor }}
-                      >
-                        <Zap className="w-3.5 h-3.5 fill-current stroke-none" />
-                        {node.fidelity}
-                      </div>
-                    </div>
-                    
-                    <div className="text-center min-w-[70px]">
-                      <div className="text-[8px] text-slate-500 uppercase tracking-widest font-black mb-1.5">Latency</div>
-                      <div className="text-sm font-black text-slate-800 flex items-center justify-center gap-1">
-                        <Eye className="w-3.5 h-3.5" style={{ color: node.nativeColor }} />
-                        {node.speed}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()
-          ) : (
-            <div className="flex flex-col items-center justify-center p-8 border-4 border-dashed border-[#862937] w-full text-[#862937] gap-2 select-none bg-white shadow-[4px_4px_0px_0px_#862937] animate-pulse">
-              <AlertCircle className="w-6 h-6" />
-              <span className="text-[10px] font-black tracking-widest uppercase">Hover over a format card to view precise benchmarks</span>
+                    {activeNode.ext}
+                  </span>
+                </h4>
+              </div>
+              <p className="text-xs text-slate-700 font-medium leading-relaxed max-w-lg normal-case">
+                {activeNode.desc}
+              </p>
             </div>
-          )}
+            
+            {/* Metrics block */}
+            <div 
+              className="flex gap-4 border-t md:border-t-0 md:border-l-2 border-dashed pt-6 md:pt-0 md:pl-6 w-full md:w-auto shrink-0 justify-around select-none"
+              style={{ borderColor: activeNode.nativeColor }}
+            >
+              <div className="text-center min-w-[70px]">
+                <div className="text-[8px] text-slate-500 uppercase tracking-widest font-black mb-1.5">Fidelity</div>
+                <div 
+                  className="text-sm font-black flex items-center justify-center gap-1"
+                  style={{ color: activeNode.nativeColor }}
+                >
+                  <Zap className="w-3.5 h-3.5 fill-current stroke-none" />
+                  {activeNode.fidelity}
+                </div>
+              </div>
+              
+              <div className="text-center min-w-[70px]">
+                <div className="text-[8px] text-slate-500 uppercase tracking-widest font-black mb-1.5">Latency</div>
+                <div className="text-sm font-black text-slate-800 flex items-center justify-center gap-1">
+                  <Eye className="w-3.5 h-3.5" style={{ color: activeNode.nativeColor }} />
+                  {activeNode.speed}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
