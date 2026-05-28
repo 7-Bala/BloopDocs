@@ -90,12 +90,40 @@ export default function Home() {
 
       {/* ─── FOOTER ─── */}
       <footer className="w-full border-t-2 border-[#862937] bg-[#C4B883] py-8 text-sm font-black uppercase tracking-widest text-[#862937]">
-        <div className="w-full px-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-[#862937] flex items-center justify-center text-[#C4B883] text-xs">BD</div>
-            <span className="text-xl tracking-normal">BLOOPDOCS</span>
+        <div className="w-full px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+          {/* Brand Logo */}
+          <div className="flex items-center gap-3 select-none">
+            <div className="w-8 h-8 bg-[#862937] flex items-center justify-center text-[#C4B883] text-xs font-black">BD</div>
+            <span className="text-xl tracking-normal font-black">BLOOPDOCS</span>
           </div>
-          <p className="tracking-widest text-xs">© {new Date().getFullYear()} BLOOPDOCS</p>
+
+          {/* Cursive "think2thrive" Branding */}
+          <div className="flex items-center gap-2 group cursor-default select-none text-[#862937] font-bold text-xs tracking-wide lowercase">
+            <span>crafted with</span>
+            <span className="relative inline-flex items-center justify-center w-5 h-5">
+              {/* Beating Heart Symbol (Beige fill, Burgundy stroke) */}
+              <svg
+                className="w-4 h-4 text-[#862937] fill-[#C4B883] transition-all duration-300 group-hover:scale-125 group-hover:fill-[#862937]"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+              </svg>
+            </span>
+            <span>by</span>
+            <span
+              className="font-caveat text-2xl tracking-normal text-[#862937] inline-block transition-transform duration-300 ease-out origin-center group-hover:scale-110 group-hover:rotate-[-2deg]"
+              style={{ fontFamily: "var(--font-caveat), Caveat, cursive" }}
+            >
+              think2thrive
+            </span>
+          </div>
+
+          {/* Copyright */}
+          <p className="tracking-widest text-xs font-black select-none">© {new Date().getFullYear()} BLOOPDOCS</p>
         </div>
       </footer>
     </main>
