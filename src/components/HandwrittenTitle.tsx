@@ -3,94 +3,151 @@
 import React, { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 
-// Elegant centerline sweep paths that perfectly span the text layout boundaries
-const CONVERT_PATH = "M 260 150 Q 380 115, 500 150 T 740 150";
-const ANYTHING_PATH = "M 180 280 Q 340 240, 500 280 T 820 280";
-
 export default function HandwrittenTitle() {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const penRef = useRef<SVGGElement | null>(null);
 
-  // Mask path elements
-  const maskPathConvertRef = useRef<SVGPathElement | null>(null);
-  const maskPathAnythingRef = useRef<SVGPathElement | null>(null);
+  // Hidden path elements for coordinate extraction
+  const pathConvertRef = useRef<SVGPathElement | null>(null);
+  const pathAnythingRef = useRef<SVGPathElement | null>(null);
+
+  // Mask polygon elements for slanted reveals
+  const maskPolyConvertRef = useRef<SVGPolygonElement | null>(null);
+  const maskPolyAnythingRef = useRef<SVGPolygonElement | null>(null);
+
+  // Text elements to measure dynamic bounding boxes
+  const textConvertRef = useRef<SVGTextElement | null>(null);
+  const textAnythingRef = useRef<SVGTextElement | null>(null);
 
   useEffect(() => {
     const pen = penRef.current;
-    const pathConvert = maskPathConvertRef.current;
-    const pathAnything = maskPathAnythingRef.current;
+    const pathConvert = pathConvertRef.current;
+    const pathAnything = pathAnythingRef.current;
+    const polyConvert = maskPolyConvertRef.current;
+    const polyAnything = maskPolyAnythingRef.current;
+    const textConvert = textConvertRef.current;
+    const textAnything = textAnythingRef.current;
 
-    if (!pen || !pathConvert || !pathAnything) {
+    if (
+      !pen ||
+      !pathConvert ||
+      !pathAnything ||
+      !polyConvert ||
+      !polyAnything ||
+      !textConvert ||
+      !textAnything
+    ) {
       return;
     }
 
-    // Measure path lengths dynamically
-    const lenConvert = pathConvert.getTotalLength();
-    const lenAnything = pathAnything.getTotalLength();
+    let tl: gsap.core.Timeline;
 
-    // Initialize stroke states (fully hidden)
-    gsap.set(pathConvert, { strokeDasharray: lenConvert, strokeDashoffset: lenConvert });
-    gsap.set(pathAnything, { strokeDasharray: lenAnything, strokeDashoffset: lenAnything });
-    gsap.set(pen, { display: "none" });
+    // Wait until all fonts are loaded so getBBox() measures final Caveat font size, not fallbacks
+    document.fonts.ready.then(() => {
+      // 1. Measure the exact SVG bounding boxes of both text elements dynamically
+      const convertBBox = textConvert.getBBox();
+      const anythingBBox = textAnything.getBBox();
 
-    // Master Calligraphy Timeline
-    const tl = gsap.timeline({
-      delay: 0.6,
-      onStart: () => {
-        // Position pen at the very start of Convert and show it
-        const startPt = pathConvert.getPointAtLength(0);
-        gsap.set(pen, { x: startPt.x, y: startPt.y, display: "block", opacity: 1 });
-      },
-      onComplete: () => {
-        // Fade the pen away elegantly once writing finishes
-        gsap.to(pen, {
-          opacity: 0,
-          duration: 0.4,
-          ease: "power2.out",
-          onComplete: () => {
-            gsap.set(pen, { display: "none" });
-          }
-        });
-      }
-    });
+      // 2. Add a tiny grace padding (6px) so the pen starts slightly before and ends slightly after the text
+      const pad = 6;
+      const xStartConv = convertBBox.x - pad;
+      const xEndConv = convertBBox.x + convertBBox.width + pad;
+      const dConv = `M ${xStartConv} 150 Q ${(xStartConv + xEndConv) / 2 - 50} 115, ${(xStartConv + xEndConv) / 2} 150 T ${xEndConv} 150`;
 
-    // Helper to animate mask path reveal & keep the pen tip in pixel-perfect sync
-    const animateSweep = (
-      path: SVGPathElement,
-      length: number,
-      duration: number,
-      ease: string = "power1.inOut"
-    ) => {
-      return {
-        strokeDashoffset: 0,
-        duration: duration,
-        ease: ease,
-        onUpdate: function (this: any) {
-          const progress = this.progress();
-          const currentLength = progress * length;
-          const pt = path.getPointAtLength(currentLength);
-          gsap.set(pen, { x: pt.x, y: pt.y });
-        }
+      const xStartAny = anythingBBox.x - pad;
+      const xEndAny = anythingBBox.x + anythingBBox.width + pad;
+      const dAny = `M ${xStartAny} 280 Q ${(xStartAny + xEndAny) / 2 - 50} 240, ${(xStartAny + xEndAny) / 2} 280 T ${xEndAny} 280`;
+
+      // 3. Update the path attributes dynamically
+      pathConvert.setAttribute("d", dConv);
+      pathAnything.setAttribute("d", dAny);
+
+      // 4. Measure the paths dynamically after setting them
+      const lenConvert = pathConvert.getTotalLength();
+      const lenAnything = pathAnything.getTotalLength();
+
+      // 5. Slant angle configuration for perfect cursive alignment
+      // 0 degrees slant ensures a clean vertical mask reveal, preventing any early unmasking of upcoming letters.
+      const slantAngle = 0;
+      const tanSlant = Math.tan((slantAngle * Math.PI) / 180);
+
+      // Helper function to update slanted mask polygon points passing through a given (x, y)
+      const updateMaskPolygon = (poly: SVGPolygonElement, x: number, y: number) => {
+        // x(y) = x + tan(theta) * (y_target - y)
+        const xTop = x - y * tanSlant;
+        const xBottom = x + (400 - y) * tanSlant;
+        poly.setAttribute("points", `0,0 ${xTop},0 ${xBottom},400 0,400`);
       };
-    };
 
-    // 1. Write "Convert" in one smooth, continuous calligraphic sweep
-    tl.to(pathConvert, animateSweep(pathConvert, lenConvert, 2.2, "power1.inOut"));
+      // Set initial states: mask polygons are empty, pen is hidden
+      polyConvert.setAttribute("points", "0,0 0,0 0,400 0,400");
+      polyAnything.setAttribute("points", "0,0 0,0 0,400 0,400");
+      gsap.set(pen, { display: "none" });
 
-    // 2. Lift pen and glide smoothly to the start of "Anything."
-    const startAnythingPt = pathAnything.getPointAtLength(0);
-    tl.to(pen, {
-      x: startAnythingPt.x,
-      y: startAnythingPt.y,
-      duration: 0.6,
-      ease: "power2.inOut",
+      // Master Calligraphy Timeline
+      tl = gsap.timeline({
+        delay: 0.6,
+        onStart: () => {
+          // Position pen at the very start of Convert and show it
+          const startPt = pathConvert.getPointAtLength(0);
+          gsap.set(pen, { x: startPt.x, y: startPt.y, display: "block", opacity: 1 });
+        },
+        onComplete: () => {
+          // Fade the pen away elegantly once writing finishes
+          gsap.to(pen, {
+            opacity: 0,
+            duration: 0.4,
+            ease: "power2.out",
+            onComplete: () => {
+              gsap.set(pen, { display: "none" });
+            }
+          });
+        }
+      });
+
+      // 1. Write "Convert" in one smooth, continuous calligraphic sweep
+      const objConvert = { val: 0 };
+      tl.to(objConvert, {
+        val: lenConvert,
+        duration: 2.2,
+        ease: "power1.inOut",
+        onUpdate: () => {
+          const pt = pathConvert.getPointAtLength(objConvert.val);
+          gsap.set(pen, { x: pt.x, y: pt.y });
+          updateMaskPolygon(polyConvert, pt.x, pt.y);
+        }
+      });
+
+      // 2. Lift pen and glide smoothly to the start of "Anything."
+      const startAnythingPt = pathAnything.getPointAtLength(0);
+      tl.to(pen, {
+        x: startAnythingPt.x,
+        y: startAnythingPt.y,
+        duration: 0.6,
+        ease: "power2.inOut",
+        onUpdate: () => {
+          // Keep the first mask fully open and second mask empty during transit
+          updateMaskPolygon(polyConvert, xEndConv, 150);
+          polyAnything.setAttribute("points", "0,0 0,0 0,400 0,400");
+        }
+      });
+
+      // 3. Write "Anything." in one smooth, continuous calligraphic sweep
+      const objAnything = { val: 0 };
+      tl.to(objAnything, {
+        val: lenAnything,
+        duration: 2.8,
+        ease: "power1.inOut",
+        onUpdate: () => {
+          const pt = pathAnything.getPointAtLength(objAnything.val);
+          gsap.set(pen, { x: pt.x, y: pt.y });
+          updateMaskPolygon(polyAnything, pt.x, pt.y);
+        }
+      });
     });
-
-    // 3. Write "Anything." in one smooth, continuous calligraphic sweep
-    tl.to(pathAnything, animateSweep(pathAnything, lenAnything, 2.8, "power1.inOut"));
 
     return () => {
-      tl.kill();
+      if (tl) tl.kill();
     };
   }, []);
 
@@ -103,37 +160,34 @@ export default function HandwrittenTitle() {
         style={{ overflow: "visible" }}
       >
         <defs>
-          {/* Mask 1 — Convert reveal */}
+          {/* Hidden reference paths used purely for mathematical stroke coordinate calculations */}
+          <path ref={pathConvertRef} fill="none" />
+          <path ref={pathAnythingRef} fill="none" />
+
+          {/* Mask 1 — Convert sliding window reveal */}
           <mask id="mask-convert" maskUnits="userSpaceOnUse">
             <rect x="0" y="0" width="1000" height="400" fill="black" />
-            <path
-              ref={maskPathConvertRef}
-              d={CONVERT_PATH}
-              fill="none"
-              stroke="white"
-              strokeWidth="200"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+            <polygon
+              ref={maskPolyConvertRef}
+              points="0,0 0,0 0,400 0,400"
+              fill="white"
             />
           </mask>
 
-          {/* Mask 2 — Anything. reveal */}
+          {/* Mask 2 — Anything. sliding window reveal */}
           <mask id="mask-anything" maskUnits="userSpaceOnUse">
             <rect x="0" y="0" width="1000" height="400" fill="black" />
-            <path
-              ref={maskPathAnythingRef}
-              d={ANYTHING_PATH}
-              fill="none"
-              stroke="white"
-              strokeWidth="200"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+            <polygon
+              ref={maskPolyAnythingRef}
+              points="0,0 0,0 0,400 0,400"
+              fill="white"
             />
           </mask>
         </defs>
 
         {/* Cursive text layers using Caveat from Google Fonts */}
         <text
+          ref={textConvertRef}
           x="500"
           y="180"
           textAnchor="middle"
@@ -148,6 +202,7 @@ export default function HandwrittenTitle() {
         </text>
 
         <text
+          ref={textAnythingRef}
           x="500"
           y="310"
           textAnchor="middle"
@@ -161,13 +216,13 @@ export default function HandwrittenTitle() {
           Anything.
         </text>
 
-        {/* Slanted Golden & Crimson Calligraphic Fountain Pen + Luxurious Right Hand */}
+        {/* Slanted Golden & Crimson Calligraphic Fountain Pen (Pen Only) */}
         <g
           ref={penRef}
           style={{ display: "none", transformOrigin: "0px 0px" }}
         >
-          {/* Tilted pen group slanted at a natural right-handed writing angle (+35 degrees) */}
-          <g transform="rotate(35)">
+          {/* Slanted pen group rotated at 130 degrees to lean down-right (held from below) for realistic right-handed posture */}
+          <g transform="rotate(130)">
             {/* 1. Golden Nib (Highly detailed two-tone gold) */}
             <path
               d="M 0 0 L -4 -10 L -8 -25 L 8 -25 L 4 -10 Z"
@@ -217,7 +272,6 @@ export default function HandwrittenTitle() {
               stroke="#862937"
               strokeWidth="1.2"
             />
-
           </g>
         </g>
       </svg>
