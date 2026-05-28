@@ -96,58 +96,63 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════════
-          SECTION 2 — DOCUMENT DROP STAGE (pinned)
-          Documents rain from above, bounce with dust,
-          then scatter away revealing the converter.
+          SECTION 2 — DOCUMENT DROP STAGE
+          Outer: 400vh tall (gives scroll distance for the animation)
+          Inner: CSS sticky so it stays visible during scroll
          ══════════════════════════════════════════════ */}
       <div
         ref={docDropSectionRef}
-        className="w-full relative bg-[#C4B883]"
-        style={{ height: "100vh", overflow: "hidden" }}
+        className="relative w-full"
+        style={{ height: "400vh" }}
         aria-hidden="true"
       >
-        {/* Dust particle container — same size as section, clipped */}
+        {/* Inner sticky panel — visible for all 400vh of scrolling */}
         <div
-          ref={dustContainerRef}
-          className="absolute inset-0 pointer-events-none z-30"
-        />
+          className="sticky top-0 w-full bg-[#C4B883]"
+          style={{ height: "100vh", overflow: "hidden" }}
+        >
+          {/* Dust particle container */}
+          <div
+            ref={dustContainerRef}
+            className="absolute inset-0 pointer-events-none z-30"
+          />
 
-        {/* Label */}
-        <div className="absolute top-10 left-1/2 -translate-x-1/2 z-40 pointer-events-none whitespace-nowrap">
-          <p className="text-xs md:text-sm font-black uppercase tracking-[0.4em] text-[#862937] opacity-40">
-            Drop any format — we handle it
-          </p>
+          {/* Label */}
+          <div className="absolute top-10 left-1/2 -translate-x-1/2 z-40 pointer-events-none whitespace-nowrap">
+            <p className="text-xs md:text-sm font-black uppercase tracking-[0.4em] text-[#862937] opacity-40">
+              Drop any format — we handle it
+            </p>
+          </div>
+
+          {/* Ground line */}
+          <div className="absolute left-8 right-8 z-10" style={{ bottom: "28%" }}>
+            <div className="w-full h-[2px] bg-[#862937] opacity-20" />
+          </div>
+
+          {/* Document cards — spread across width, anchored at settle height */}
+          {FALL_DOCS.map((doc, idx) => {
+            const leftPercent = 8 + idx * 14;
+            return (
+              <div
+                key={idx}
+                ref={(el) => { docRefs.current[idx] = el; }}
+                className="absolute z-20"
+                style={{
+                  width: 112,
+                  height: 144,
+                  left: `calc(${leftPercent}% - 56px)`,
+                  bottom: "28%",
+                }}
+              >
+                <FloatingDocCard
+                  ext={doc.ext}
+                  name={doc.name}
+                  brandColor={doc.brandColor}
+                />
+              </div>
+            );
+          })}
         </div>
-
-        {/* Ground shadow line */}
-        <div className="absolute left-8 right-8 z-10" style={{ bottom: "28%" }}>
-          <div className="w-full h-[2px] bg-[#862937] opacity-15" />
-        </div>
-
-        {/* Document cards — spread across the width, positioned at settle height */}
-        {FALL_DOCS.map((doc, idx) => {
-          // Evenly spread 6 cards across the width (roughly 14% → 86%)
-          const leftPercent = 8 + idx * 14;
-          return (
-            <div
-              key={idx}
-              ref={(el) => { docRefs.current[idx] = el; }}
-              className="absolute z-20"
-              style={{
-                width: 112,
-                height: 144,
-                left: `calc(${leftPercent}% - 56px)`,
-                bottom: "28%",       // settled position — GSAP animates y from -400 to 0
-              }}
-            >
-              <FloatingDocCard
-                ext={doc.ext}
-                name={doc.name}
-                brandColor={doc.brandColor}
-              />
-            </div>
-          );
-        })}
       </div>
 
       {/* ══════════════════════════════════════════════
