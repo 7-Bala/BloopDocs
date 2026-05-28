@@ -203,10 +203,10 @@ export function useDocumentDrop(
     const removeTrigger = ScrollTrigger.create({
       trigger: section,
       start: "bottom top", // when bottom of the section leaves top of the viewport
-      onLeave: () => {
+      onLeave: (self) => {
         const height = section.offsetHeight;
         if (height > 0) {
-          removeTrigger.disable();
+          self.disable();
           section.style.display = "none";
           section.style.height = "0px";
           window.scrollTo(0, window.scrollY - height);
