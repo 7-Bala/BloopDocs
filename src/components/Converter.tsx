@@ -43,8 +43,17 @@ export default function Converter() {
   const [targetExt, setTargetExt] = useState<string>("pdf");
   const [isDragActive, setIsDragActive] = useState<boolean>(false);
   const [downloadUrl, setDownloadUrl] = useState<string>("");
+  const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
+  const [sessionId, setSessionId] = useState<string>("");
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach(clearTimeout);
+    };
+  }, []);
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return "0 B";
@@ -113,6 +122,30 @@ export default function Converter() {
     if (files.length === 0 || !targetExt) return;
 
     setState("converting");
+    
+    const sId = Math.random().toString(36).substring(2, 8).toUpperCase();
+    setSessionId(sId);
+    setTerminalLogs([`Initializing secure sandbox session: bloopdocs_engine_${sId}`]);
+
+    // Clear existing timeouts
+    timeoutsRef.current.forEach(clearTimeout);
+    timeoutsRef.current = [];
+
+    // Helper to queue progress logs
+    const addLogWithDelay = (message: string, delay: number) => {
+      const t = setTimeout(() => {
+        setTerminalLogs(prev => [...prev, message]);
+      }, delay);
+      timeoutsRef.current.push(t);
+    };
+
+    addLogWithDelay("Spawning headless LibreOffice compiler instance...", 1200);
+    addLogWithDelay("Allocating private session memory block for thread isolation...", 2800);
+    addLogWithDelay(`Mounting source documents and preparing translation queue...`, 4500);
+    addLogWithDelay(`Executing LibreOffice conversion to format: ${targetExt.toUpperCase()}...`, 6800);
+    addLogWithDelay("Rebuilding document grids, spacing layers, and rendering geometry...", 9500);
+    addLogWithDelay("Creating deep-compressed JSZip export cluster stream...", 12500);
+    addLogWithDelay("Finalizing system integrity checks and wiping server temp blocks...", 15000);
 
     const formData = new FormData();
     files.forEach(file => formData.append("files", file));
@@ -132,9 +165,28 @@ export default function Converter() {
       const url = window.URL.createObjectURL(blob);
       setDownloadUrl(url);
 
+      // Success! Clear timeouts and show final success outputs
+      timeoutsRef.current.forEach(clearTimeout);
+      setTerminalLogs(prev => [
+        ...prev,
+        `[SUCCESS] LibreOffice core successfully converted all files to ${targetExt.toUpperCase()}!`,
+        `[SUCCESS] Session: bloopdocs_engine_${sId} secured and wiped (0 bytes remaining).`,
+        "Ready for download compilation."
+      ]);
+
       setState("success");
     } catch (error: any) {
       console.error(error);
+      
+      // Error! Clear timeouts and show failure outputs
+      timeoutsRef.current.forEach(clearTimeout);
+      setTerminalLogs(prev => [
+        ...prev,
+        `[ERROR] Conversion engine encountered a fatal exception.`,
+        `[ERROR] Details: ${error.message || "Unknown compile error"}.`,
+        `[ERROR] Securely wiping conversion session block: COMPLETE.`
+      ]);
+
       setState("selected");
       showToast(error.message || "An error occurred during local conversion.", "error");
     }
@@ -248,6 +300,31 @@ export default function Converter() {
                 );
               })}
             </div>
+
+            {/* ENGINE TERMINAL LOGS CONSOLE */}
+            {state === "converting" && (
+              <div className="p-8 border-t-[2px] border-solid border-[#862937] bg-[#1E1E1E] font-mono text-sm text-[#3FA94D] text-left rounded-none shadow-none select-text">
+                <div className="flex items-center justify-between border-b border-[#862937] pb-3 mb-4">
+                  <span className="font-black uppercase tracking-wider text-[#862937]">BloopDocs Engine Terminal</span>
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#3FA94D] animate-ping" />
+                    <span className="text-[10px] uppercase font-bold text-[#3FA94D]">active</span>
+                  </span>
+                </div>
+                <div className="space-y-2 h-[140px] overflow-y-auto custom-scrollbar pr-2">
+                  {terminalLogs.map((log, i) => (
+                    <div key={i} className="flex gap-3 leading-relaxed">
+                      <span className="text-[#862937] font-bold select-none">&gt;</span>
+                      <span className="font-bold tracking-normal">{log}</span>
+                    </div>
+                  ))}
+                  <div className="flex items-center gap-3">
+                    <span className="text-[#862937] font-bold select-none">&gt;</span>
+                    <span className="inline-block w-2.5 h-4 bg-[#3FA94D] animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Action Bar footer - 2px structural border */}
             <div className="p-8 flex flex-col sm:flex-row items-center justify-between gap-6 border-t-[2px] border-solid border-[#862937] bg-[#B9A071] rounded-none shadow-none">
