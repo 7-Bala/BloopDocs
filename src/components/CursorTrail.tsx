@@ -2,92 +2,100 @@
 
 import React, { useEffect, useRef } from "react";
 
-interface TrailPoint {
+/**
+ * Hardware-accelerated cursor trail using canvas.
+ * 
+ * Glitch-proofed:
+ *  - Points stored in a flat typed-like array, swapped out each frame (no splice)
+ *  - Capped at 80 points max to prevent frame drops on fast mouse
+ *  - Canvas dimensions cached to avoid repeated DOM reads in render loop
+ *  - DPR handled once on resize, not per-frame
+ */
+
+const MAX_POINTS = 80;
+const DECAY_RATE = 0.05;
+const INITIAL_SIZE = 14;
+
+interface Pt {
   x: number;
   y: number;
   alpha: number;
-  size: number;
 }
 
 export default function CursorTrail() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const pointsRef = useRef<TrailPoint[]>([]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) return;
 
-    let animationFrameId: number;
+    let raf = 0;
+    let w = 0;
+    let h = 0;
+    let dpr = 1;
+    let points: Pt[] = [];
 
-    // Handle high-DPI (Retina) scaling for absolute crispness
-    const resizeCanvas = () => {
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = window.innerWidth * dpr;
-      canvas.height = window.innerHeight * dpr;
-      canvas.style.width = `${window.innerWidth}px`;
-      canvas.style.height = `${window.innerHeight}px`;
-      ctx.setTransform(1, 0, 0, 1, 0, 0); // reset scale matrix
-      ctx.scale(dpr, dpr);
+    const resize = () => {
+      dpr = window.devicePixelRatio || 1;
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
+    resize();
+    window.addEventListener("resize", resize);
 
-    // Silky smooth event handler (Zero React state triggers)
-    const handleMouseMove = (e: MouseEvent) => {
-      pointsRef.current.push({
-        x: e.clientX,
-        y: e.clientY,
-        alpha: 1.0,
-        size: 16, // Stark 16px square
-      });
+    const onMove = (e: MouseEvent) => {
+      // Cap the points array to prevent unbounded growth
+      if (points.length >= MAX_POINTS) {
+        points.shift();
+      }
+      points.push({ x: e.clientX, y: e.clientY, alpha: 1.0 });
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", onMove);
 
-    // Hardware-accelerated Render loop
     const render = () => {
-      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      ctx.clearRect(0, 0, w, h);
 
-      const points = pointsRef.current;
-      for (let i = points.length - 1; i >= 0; i--) {
+      // Build the next frame's points without splice (no index jumps)
+      const next: Pt[] = [];
+      for (let i = 0; i < points.length; i++) {
         const p = points[i];
-        
-        // Beautiful brutalist tapered size decay
-        const size = p.size * p.alpha;
-
-        // Draw crisp solid square
-        ctx.fillStyle = `rgba(134, 41, 55, ${p.alpha})`; // #862937
-        ctx.fillRect(p.x - size / 2, p.y - size / 2, size, size);
-
-        // Smooth linear opacity decay
-        p.alpha -= 0.06;
-        
-        // Clean up dead points
-        if (p.alpha <= 0) {
-          points.splice(i, 1);
+        const size = INITIAL_SIZE * p.alpha;
+        ctx.fillStyle = `rgba(134,41,55,${p.alpha})`;
+        ctx.fillRect(p.x - size * 0.5, p.y - size * 0.5, size, size);
+        p.alpha -= DECAY_RATE;
+        if (p.alpha > 0) {
+          next.push(p);
         }
       }
+      points = next;
 
-      animationFrameId = requestAnimationFrame(render);
+      raf = requestAnimationFrame(render);
     };
 
-    render();
+    raf = requestAnimationFrame(render);
 
     return () => {
-      window.removeEventListener("resize", resizeCanvas);
-      window.removeEventListener("mousemove", handleMouseMove);
-      cancelAnimationFrame(animationFrameId);
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+      window.removeEventListener("mousemove", onMove);
     };
   }, []);
 
   return (
     <canvas
       ref={canvasRef}
-      className="pointer-events-none fixed inset-0 z-[9999] w-full h-full"
+      className="pointer-events-none fixed inset-0 z-[9999]"
+      aria-hidden="true"
     />
   );
 }

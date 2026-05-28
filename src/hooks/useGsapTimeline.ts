@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, RefObject } from "react";
+import { useEffect, RefObject } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -9,7 +9,7 @@ if (typeof window !== "undefined") {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   TYPEWRITER — deterministic timing, no randomness (avoids hydration issues)
+   TYPEWRITER — deterministic per-char reveal, no randomness
    ═══════════════════════════════════════════════════════════════════════════ */
 export function useTypewriter(
   containerRef: RefObject<HTMLHeadingElement | null>,
@@ -22,21 +22,20 @@ export function useTypewriter(
     const letters = el.querySelectorAll(".tw-char");
     if (letters.length === 0) return;
 
-    // Timeline: 0.12s per char, simple and reliable
     const tl = gsap.timeline({ delay: 0.5 });
 
+    // Reveal each letter at 0.12s intervals
     letters.forEach((letter, i) => {
       tl.set(letter, { visibility: "visible" }, i * 0.12);
     });
 
-    // Fade cursor after all letters typed
+    // Fade out cursor after typing finishes
     if (cursorRef.current) {
-      const endTime = letters.length * 0.12 + 1;
       tl.to(cursorRef.current, {
         opacity: 0,
         duration: 0.5,
         ease: "power1.inOut",
-      }, endTime);
+      }, letters.length * 0.12 + 1.0);
     }
 
     return () => { tl.kill(); };
@@ -44,12 +43,14 @@ export function useTypewriter(
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   DOCUMENT DROP — scroll-driven, no GSAP pin (CSS sticky does the locking)
+   DOCUMENT DROP — scroll-scrubbed, CSS sticky does the viewport lock
    
-   Layout contract:
-     outerRef = div with height:300vh (scroll runway)
-     Inner child = div with position:sticky, top:0, height:100vh, overflow:hidden
-     docRefs = absolute-positioned cards inside the inner sticky panel
+   Layout:
+     outerRef = div height:300vh (scroll runway for the trigger)
+     Inside:  div.sticky.top-0.h-screen.overflow-hidden (viewport-locked panel)
+     docRefs  = absolute cards inside the sticky panel
+   
+   GSAP drives yPercent from -500 → 0 → -600 as user scrolls the 300vh.
    ═══════════════════════════════════════════════════════════════════════════ */
 export function useDocumentDrop(
   outerRef: RefObject<HTMLDivElement | null>,
@@ -63,20 +64,20 @@ export function useDocumentDrop(
     const docs = (docRefs.current || []).filter(Boolean) as HTMLDivElement[];
     if (docs.length === 0) return;
 
-    // Hide all docs above the viewport (will be clipped by overflow:hidden)
+    // Initial state: hide above the clip boundary
     gsap.set(docs, { yPercent: -500, opacity: 1, rotation: 0, x: 0 });
 
-    // Scrubbed timeline: progress 0→1 as outer scrolls through viewport
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: outer,
         start: "top top",
         end: "bottom bottom",
         scrub: 2,
+        invalidateOnRefresh: true,
       },
     });
 
-    // Phase 1: Fall with bounce (0% → 50% of scroll)
+    // Phase 1 — Fall with bounce
     docs.forEach((doc, i) => {
       tl.to(doc, {
         yPercent: 0,
@@ -86,7 +87,7 @@ export function useDocumentDrop(
       }, i * 0.2);
     });
 
-    // Phase 2: Brief float (50% → 60% of scroll)
+    // Phase 2 — Float
     const floatTime = docs.length * 0.2 + 1;
     tl.to(docs, {
       yPercent: -8,
@@ -94,7 +95,7 @@ export function useDocumentDrop(
       ease: "sine.inOut",
     }, floatTime);
 
-    // Phase 3: Scatter upward (60% → 100% of scroll)
+    // Phase 3 — Scatter upward
     const scatterTime = floatTime + 0.6;
     docs.forEach((doc, i) => {
       tl.to(doc, {
@@ -107,8 +108,9 @@ export function useDocumentDrop(
       }, scatterTime + i * 0.05);
     });
 
-    // Dust burst (fires once when ~40% scrolled)
-    const dustTrigger = ScrollTrigger.create({
+    // Dust burst — fires once
+    let dustTrigger: ScrollTrigger | null = null;
+    dustTrigger = ScrollTrigger.create({
       trigger: outer,
       start: "30% top",
       once: true,
@@ -124,8 +126,9 @@ export function useDocumentDrop(
     });
 
     return () => {
+      tl.scrollTrigger?.kill();
       tl.kill();
-      dustTrigger.kill();
+      dustTrigger?.kill();
     };
   }, [outerRef, docRefs, dustRef]);
 }
@@ -151,14 +154,17 @@ function burstDust(container: HTMLDivElement, cx: number, cy: number) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   CONVERTER REVEAL — simple scroll-triggered slide-up
+   CONVERTER REVEAL
+   
+   BUG FIX: Previous version killed ALL ScrollTriggers on cleanup,
+   which nuked the doc-drop triggers. Now only kills its own.
    ═══════════════════════════════════════════════════════════════════════════ */
 export function useConverterReveal(ref: RefObject<HTMLDivElement | null>) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
 
-    gsap.fromTo(el,
+    const anim = gsap.fromTo(el,
       { opacity: 0, y: 100 },
       {
         opacity: 1, y: 0,
@@ -172,12 +178,16 @@ export function useConverterReveal(ref: RefObject<HTMLDivElement | null>) {
       }
     );
 
-    return () => { ScrollTrigger.getAll().forEach(t => t.kill()); };
+    return () => {
+      // Only kill THIS animation's ScrollTrigger, not all of them
+      anim.scrollTrigger?.kill();
+      anim.kill();
+    };
   }, [ref]);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   LEGACY STUBS — kept so other components don't break
+   LEGACY STUBS
    ═══════════════════════════════════════════════════════════════════════════ */
 export function useHeroAnimation(..._args: unknown[]) { /* no-op */ }
 export function useConverterParachute(..._args: unknown[]) { /* no-op */ }
