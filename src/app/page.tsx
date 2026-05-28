@@ -4,7 +4,8 @@ import React, { useRef } from "react";
 import Navbar from "@/components/Navbar";
 import Converter from "@/components/Converter";
 import FloatingDocCard from "@/components/FloatingDocCard";
-import { useTypewriter, useDocumentDrop, useConverterReveal } from "@/hooks/useGsapTimeline";
+import HandwrittenTitle from "@/components/HandwrittenTitle";
+import { useDocumentDrop, useConverterReveal } from "@/hooks/useGsapTimeline";
 
 const FALL_DOCS = [
   { ext: "PDF",   name: "report.pdf",    brandColor: "#FF3B30" },
@@ -16,14 +17,11 @@ const FALL_DOCS = [
 ];
 
 export default function Home() {
-  const titleRef = useRef<HTMLHeadingElement | null>(null);
-  const cursorRef = useRef<HTMLSpanElement | null>(null);
   const outerDropRef = useRef<HTMLDivElement | null>(null);
   const docRefs = useRef<(HTMLDivElement | null)[]>([]);
   const dustRef = useRef<HTMLDivElement | null>(null);
   const converterRef = useRef<HTMLDivElement | null>(null);
 
-  useTypewriter(titleRef, cursorRef);
   useDocumentDrop(outerDropRef, docRefs, dustRef);
   useConverterReveal(converterRef);
 
@@ -33,25 +31,9 @@ export default function Home() {
 
       {/* ─── HERO ─── */}
       <section className="w-full min-h-screen flex flex-col items-center justify-center px-6 pt-20 border-b-2 border-[#862937] bg-[#C4B883]">
-        <h1
-          ref={titleRef}
-          className="font-black text-[#862937] text-center uppercase select-none leading-[0.85] text-[clamp(4rem,15vw,12rem)]"
-        >
-          {"CONVERT".split("").map((ch, i) => (
-            <span key={`a${i}`} className="tw-char inline-block" style={{ visibility: "hidden" }}>{ch}</span>
-          ))}
-          <br />
-          {"ANYTHING.".split("").map((ch, i) => (
-            <span key={`b${i}`} className="tw-char inline-block" style={{ visibility: "hidden" }}>{ch}</span>
-          ))}
-          <span
-            ref={cursorRef}
-            className="inline-block ml-1 align-middle"
-            aria-hidden="true"
-          >
-            <span className="inline-block w-[0.12em] h-[0.75em] bg-[#862937] animate-blink" />
-          </span>
-        </h1>
+        <div className="w-full max-w-4xl">
+          <HandwrittenTitle />
+        </div>
         <p className="mt-6 text-lg md:text-2xl text-[#903635] font-bold tracking-widest uppercase text-center max-w-3xl leading-relaxed select-none">
           Strictly local. Absolutely free.<br />Zero size limits.
         </p>
