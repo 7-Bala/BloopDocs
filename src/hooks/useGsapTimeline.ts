@@ -72,7 +72,7 @@ export function useTypewriter(
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DOCUMENT DROP + DUST HOOK
-// Triggered by scroll. Documents fall from above, bounce with dust, then fade.
+// Triggered by scroll. Documents fall from above, bounce, then scatter away.
 // ─────────────────────────────────────────────────────────────────────────────
 export function useDocumentDrop(
   sectionRef: RefObject<HTMLDivElement | null>,
@@ -86,112 +86,77 @@ export function useDocumentDrop(
       const docs = docRefs.current.filter(Boolean) as HTMLDivElement[];
       if (docs.length === 0) return;
 
-      // Place docs off-screen above
-      gsap.set(docs, {
-        y: "-120vh",
-        x: 0,
-        opacity: 1,
-        rotation: 0,
-        scale: 1,
-      });
+      // ── Initial state: all docs start ABOVE the section (invisible via overflow:hidden on parent) ──
+      gsap.set(docs, { y: -400, opacity: 1, rotation: 0, x: 0 });
 
-      // Master timeline, controlled by ScrollTrigger scrub
+      // ── PHASE 1+2+3 scrubbed timeline (pin the section) ──
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top top",
-          end: "+=280%",   // pin for 2.8x screen heights of scroll
+          end: "+=220%",    // amount of scroll to consume while pinned
           pin: true,
-          scrub: 1.5,
+          scrub: 1.2,
           anticipatePin: 1,
         },
       });
 
-      // --- PHASE 1: Documents fall one by one and bounce ---
+      // Phase 1 — Fall in one-by-one with a satisfying bounce
       docs.forEach((doc, i) => {
-        const staggerOffset = i * 0.18;
-        const floorY = 0; // settled at natural position
-
-        // Fall from above with rotation
         tl.to(
           doc,
           {
-            y: floorY + 18, // overshoot floor
-            rotation: (i % 2 === 0 ? 1 : -1) * (3 + i * 1.5),
-            duration: 0.6,
-            ease: "power2.in",
+            y: 0,
+            ease: "bounce.out",    // built-in GSAP bounce easing = realistic ball bounce
+            duration: 0.7,
+            rotation: (i % 2 === 0 ? 1 : -1) * (2 + i * 2),
           },
-          staggerOffset
+          i * 0.15   // stagger start times
         );
-
-        // Bounce 1 (primary bounce – like hitting ground hard)
-        tl.to(
-          doc,
-          {
-            y: floorY - 60 - i * 8,
-            rotation: (i % 2 === 0 ? -1 : 1) * (2 + i),
-            duration: 0.2,
-            ease: "power2.out",
-          },
-          staggerOffset + 0.6
-        );
-
-        // Bounce 2 (smaller)
-        tl.to(
-          doc,
-          {
-            y: floorY + 6,
-            rotation: (i % 2 === 0 ? 0.5 : -0.5) * (i + 1),
-            duration: 0.18,
-            ease: "power2.in",
-          },
-          staggerOffset + 0.8
-        );
-
-        // Settle
-        tl.to(
-          doc,
-          {
-            y: floorY - 12 - i * 4,
-            x: (i % 2 === 0 ? 1 : -1) * (i * 6),
-            rotation: (i % 2 === 0 ? 1 : -1) * (i * 2),
-            duration: 0.14,
-            ease: "power1.out",
-          },
-          staggerOffset + 0.98
-        );
-
-        // Spawn dust at impact moment
-        spawnDust(dustContainerRef, doc, staggerOffset + 0.6, tl);
       });
 
-      // --- PHASE 2: Float / hover for a moment ---
-      const floatStart = docs.length * 0.18 + 1.2;
+      // Phase 2 — Pause / float: slight upward drift
       tl.to(
         docs,
-        {
-          y: "-=15",
-          duration: 0.5,
-          ease: "sine.inOut",
-        },
-        floatStart
+        { y: -18, ease: "sine.inOut", duration: 0.35 },
+        docs.length * 0.15 + 0.55
       );
 
-      // --- PHASE 3: Scatter and fly away upward ---
-      const scatterStart = floatStart + 0.7;
+      // Phase 3 — Scatter: all docs fly upward + sideways and fade
       docs.forEach((doc, i) => {
         tl.to(
           doc,
           {
-            y: "-130vh",
-            x: (i % 2 === 0 ? -1 : 1) * (60 + i * 40),
-            rotation: (i % 2 === 0 ? -1 : 1) * (20 + i * 12),
+            y: -500,
+            x: (i % 2 === 0 ? -1 : 1) * (60 + i * 35),
             opacity: 0,
-            duration: 0.8,
+            rotation: (i % 2 === 0 ? -1 : 1) * (25 + i * 12),
             ease: "power2.in",
+            duration: 0.5,
           },
-          scatterStart + i * 0.05
+          docs.length * 0.15 + 1.05 + i * 0.04
         );
+      });
+
+      // ── PHASE 1 DUST: separate non-scrubbed trigger fires once on entry ──
+      // (tl.call() does not fire reliably in scrub mode — use a standalone ST instead)
+      ScrollTrigger.create({
+        trigger: sectionRef.current,
+        start: "top+=60% top",   // roughly when first docs have landed
+        once: true,
+        onEnter: () => {
+          const container = dustContainerRef.current;
+          if (!container) return;
+          docs.forEach((doc) => {
+            const rect = doc.getBoundingClientRect();
+            const sRect = container.getBoundingClientRect();
+            spawnDustBurst(
+              container,
+              rect.left - sRect.left + rect.width / 2,
+              rect.bottom - sRect.top
+            );
+          });
+        },
       });
     }, sectionRef);
 
@@ -199,69 +164,38 @@ export function useDocumentDrop(
   }, [sectionRef, docRefs, dustContainerRef]);
 }
 
-// Helper: spawn dust particles at impact point
-function spawnDust(
-  dustContainerRef: RefObject<HTMLDivElement | null>,
-  doc: HTMLDivElement,
-  atTime: number,
-  tl: gsap.core.Timeline
-) {
-  const container = dustContainerRef.current;
-  if (!container) return;
+// Spawns radial dust particles at (cx, cy) inside a container
+function spawnDustBurst(container: HTMLDivElement, cx: number, cy: number) {
+  const COUNT = 14;
+  for (let i = 0; i < COUNT; i++) {
+    const el = document.createElement("div");
+    const size = 2 + Math.random() * 5;
+    el.style.cssText = `
+      position:absolute;
+      left:${cx}px; top:${cy}px;
+      width:${size}px; height:${size}px;
+      background:rgba(134,41,55,${0.25 + Math.random() * 0.55});
+      pointer-events:none; z-index:60;
+    `;
+    container.appendChild(el);
 
-  const PARTICLE_COUNT = 12;
+    const angle = (Math.PI * 2 * i) / COUNT + (Math.random() - 0.5);
+    const dist  = 30 + Math.random() * 90;
 
-  // We use a callback at the right timeline position
-  tl.call(
-    () => {
-      const rect = doc.getBoundingClientRect();
-      const sectionRect = container.parentElement?.getBoundingClientRect();
-      if (!sectionRect) return;
-
-      const cx = rect.left - sectionRect.left + rect.width / 2;
-      const cy = rect.bottom - sectionRect.top;
-
-      for (let i = 0; i < PARTICLE_COUNT; i++) {
-        const particle = document.createElement("div");
-        const size = 3 + Math.random() * 6;
-        const angle = (Math.PI * 2 * i) / PARTICLE_COUNT + (Math.random() - 0.5) * 0.8;
-        const speed = 40 + Math.random() * 80;
-
-        particle.style.cssText = `
-          position: absolute;
-          left: ${cx}px;
-          top: ${cy}px;
-          width: ${size}px;
-          height: ${size}px;
-          background-color: rgba(134, 41, 55, ${0.3 + Math.random() * 0.5});
-          border-radius: 0;
-          pointer-events: none;
-          z-index: 50;
-        `;
-        container.appendChild(particle);
-
-        gsap.fromTo(
-          particle,
-          { x: 0, y: 0, opacity: 0.8, scale: 1 },
-          {
-            x: Math.cos(angle) * speed,
-            y: Math.sin(angle) * speed - 30 * Math.random(),
-            opacity: 0,
-            scale: 0.2,
-            duration: 0.6 + Math.random() * 0.4,
-            ease: "power2.out",
-            onComplete: () => {
-              if (particle.parentNode) {
-                particle.parentNode.removeChild(particle);
-              }
-            },
-          }
-        );
+    gsap.fromTo(
+      el,
+      { x: 0, y: 0, opacity: 0.9, scale: 1 },
+      {
+        x: Math.cos(angle) * dist,
+        y: Math.sin(angle) * dist - 20,
+        opacity: 0,
+        scale: 0.1,
+        duration: 0.5 + Math.random() * 0.5,
+        ease: "power2.out",
+        onComplete: () => el.parentNode?.removeChild(el),
       }
-    },
-    [],
-    atTime
-  );
+    );
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
