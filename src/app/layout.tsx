@@ -39,6 +39,12 @@ export const metadata: Metadata = {
     title: "BloopDocs",
     description: "Preserve layout, grids, and style typography transitions instantly.",
     type: "website",
+  },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "BloopDocs",
+    statusBarStyle: "black-translucent",
   }
 };
 
