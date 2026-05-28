@@ -44,8 +44,11 @@ export async function POST(req: NextRequest) {
       await fs.writeFile(inPath, buffer);
 
       try {
-        // Execute the authentic LibreOffice headless conversion
-        const sofficePath = "/Applications/LibreOffice.app/Contents/MacOS/soffice";
+        // Automatically resolve LibreOffice binary path based on host OS (macOS vs Linux/Docker)
+        const isMac = os.platform() === "darwin";
+        const sofficePath = isMac 
+          ? "/Applications/LibreOffice.app/Contents/MacOS/soffice" 
+          : "soffice";
         
         // --env:UserInstallation ensures multiple parallel requests don't crash the single LibreOffice profile instance
         const profilePath = path.join(tmpDir, "profile");
