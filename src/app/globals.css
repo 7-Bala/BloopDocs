@@ -21,13 +21,15 @@
   --font-sans: var(--font-outfit); 
 }
 
-/* Hide scrollbar completely */
-html, body {
-  scrollbar-width: none; /* Firefox */
+/* Hide ALL scrollbars globally — Firefox + IE + Chrome/Safari/Edge */
+* {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
 }
-html::-webkit-scrollbar,
-body::-webkit-scrollbar {
-  display: none; /* Chrome / Safari / Edge */
+*::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 body {
@@ -42,6 +44,8 @@ body {
 * {
   border-radius: 0 !important;
   box-shadow: none !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
 }
 
 /* Hard, flat accessible focus states */

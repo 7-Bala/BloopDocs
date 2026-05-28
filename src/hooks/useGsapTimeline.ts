@@ -71,123 +71,124 @@ export function useTypewriter(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DOCUMENT DROP + DUST HOOK
-// Triggered by scroll. Documents fall from above, bounce, then scatter away.
+// DOCUMENT DROP HOOK  (CSS sticky — no GSAP pin, never glitches)
+//
+// Layout contract (must match page.tsx):
+//   outerRef → a div with height: 400vh, position: relative
+//             (this is the ScrollTrigger target)
+//   docRefs  → absolute cards inside the INNER sticky div
+//
+// The inner div uses CSS  position:sticky / top:0 / height:100vh / overflow:hidden
+// so it stays visible while the user scrolls through the outer 400vh space.
 // ─────────────────────────────────────────────────────────────────────────────
 export function useDocumentDrop(
-  sectionRef: RefObject<HTMLDivElement | null>,
+  outerRef: RefObject<HTMLDivElement | null>,
   docRefs: RefObject<(HTMLDivElement | null)[]>,
   dustContainerRef: RefObject<HTMLDivElement | null>
 ) {
   useEffect(() => {
-    if (!sectionRef.current || !docRefs.current) return;
+    if (!outerRef.current) return;
 
     const ctx = gsap.context(() => {
       const docs = docRefs.current.filter(Boolean) as HTMLDivElement[];
       if (docs.length === 0) return;
 
-      // ── Initial state: all docs start ABOVE the section (invisible via overflow:hidden on parent) ──
-      gsap.set(docs, { y: -400, opacity: 1, rotation: 0, x: 0 });
+      // All docs start above the sticky panel (clipped by overflow:hidden on inner)
+      gsap.set(docs, { y: -500, x: 0, opacity: 1, rotation: 0 });
 
-      // ── PHASE 1+2+3 scrubbed timeline (pin the section) ──
+      // Timeline driven by scroll through the 400vh outer container
       const tl = gsap.timeline({
         scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top top",
-          end: "+=220%",    // amount of scroll to consume while pinned
-          pin: true,
-          scrub: 1.2,
-          anticipatePin: 1,
+          trigger: outerRef.current,
+          start: "top top",       // when outer top hits viewport top
+          end: "bottom bottom",   // when outer bottom hits viewport bottom (= 3 vh of scroll)
+          scrub: 1.8,             // smooth lag
         },
       });
 
-      // Phase 1 — Fall in one-by-one with a satisfying bounce
+      // ── Phase 1: Fall one by one (bounce.out = physics bounce) ──
       docs.forEach((doc, i) => {
         tl.to(
           doc,
           {
             y: 0,
-            ease: "bounce.out",    // built-in GSAP bounce easing = realistic ball bounce
-            duration: 0.7,
-            rotation: (i % 2 === 0 ? 1 : -1) * (2 + i * 2),
+            ease: "bounce.out",
+            duration: 0.65,
+            rotation: (i % 2 === 0 ? 1 : -1) * (3 + i * 2),
           },
-          i * 0.15   // stagger start times
+          i * 0.14
         );
       });
 
-      // Phase 2 — Pause / float: slight upward drift
+      // ── Phase 2: Float upward slightly (brief hover) ──
       tl.to(
         docs,
-        { y: -18, ease: "sine.inOut", duration: 0.35 },
-        docs.length * 0.15 + 0.55
+        { y: -20, ease: "sine.inOut", duration: 0.3 },
+        docs.length * 0.14 + 0.55
       );
 
-      // Phase 3 — Scatter: all docs fly upward + sideways and fade
+      // ── Phase 3: Scatter — fly up and away ──
       docs.forEach((doc, i) => {
         tl.to(
           doc,
           {
-            y: -500,
-            x: (i % 2 === 0 ? -1 : 1) * (60 + i * 35),
+            y: -600,
+            x: (i % 2 === 0 ? -1 : 1) * (70 + i * 38),
             opacity: 0,
-            rotation: (i % 2 === 0 ? -1 : 1) * (25 + i * 12),
+            rotation: (i % 2 === 0 ? -1 : 1) * (28 + i * 14),
             ease: "power2.in",
-            duration: 0.5,
+            duration: 0.45,
           },
-          docs.length * 0.15 + 1.05 + i * 0.04
+          docs.length * 0.14 + 1.0 + i * 0.04
         );
       });
 
-      // ── PHASE 1 DUST: separate non-scrubbed trigger fires once on entry ──
-      // (tl.call() does not fire reliably in scrub mode — use a standalone ST instead)
+      // ── Dust burst fires once around when docs start landing ──
       ScrollTrigger.create({
-        trigger: sectionRef.current,
-        start: "top+=60% top",   // roughly when first docs have landed
+        trigger: outerRef.current,
+        start: "top+=55% top",
         once: true,
         onEnter: () => {
           const container = dustContainerRef.current;
           if (!container) return;
           docs.forEach((doc) => {
-            const rect = doc.getBoundingClientRect();
-            const sRect = container.getBoundingClientRect();
+            const rect  = doc.getBoundingClientRect();
+            const cRect = container.getBoundingClientRect();
             spawnDustBurst(
               container,
-              rect.left - sRect.left + rect.width / 2,
-              rect.bottom - sRect.top
+              rect.left - cRect.left + rect.width / 2,
+              rect.bottom - cRect.top
             );
           });
         },
       });
-    }, sectionRef);
+    }, outerRef);
 
     return () => ctx.revert();
-  }, [sectionRef, docRefs, dustContainerRef]);
+  }, [outerRef, docRefs, dustContainerRef]);
 }
 
-// Spawns radial dust particles at (cx, cy) inside a container
+// Radial dust burst at (cx, cy) inside a container
 function spawnDustBurst(container: HTMLDivElement, cx: number, cy: number) {
   const COUNT = 14;
   for (let i = 0; i < COUNT; i++) {
     const el = document.createElement("div");
     const size = 2 + Math.random() * 5;
     el.style.cssText = `
-      position:absolute;
-      left:${cx}px; top:${cy}px;
-      width:${size}px; height:${size}px;
-      background:rgba(134,41,55,${0.25 + Math.random() * 0.55});
-      pointer-events:none; z-index:60;
+      position:absolute;left:${cx}px;top:${cy}px;
+      width:${size}px;height:${size}px;
+      background:rgba(134,41,55,${0.3 + Math.random() * 0.5});
+      pointer-events:none;z-index:60;
     `;
     container.appendChild(el);
-
     const angle = (Math.PI * 2 * i) / COUNT + (Math.random() - 0.5);
-    const dist  = 30 + Math.random() * 90;
-
+    const dist  = 35 + Math.random() * 85;
     gsap.fromTo(
       el,
       { x: 0, y: 0, opacity: 0.9, scale: 1 },
       {
         x: Math.cos(angle) * dist,
-        y: Math.sin(angle) * dist - 20,
+        y: Math.sin(angle) * dist - 25,
         opacity: 0,
         scale: 0.1,
         duration: 0.5 + Math.random() * 0.5,
@@ -197,6 +198,7 @@ function spawnDustBurst(container: HTMLDivElement, cx: number, cy: number) {
     );
   }
 }
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONVERTER SLIDE-IN HOOK
