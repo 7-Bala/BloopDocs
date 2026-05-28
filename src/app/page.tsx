@@ -108,7 +108,7 @@ export default function Home() {
 
       {/* ─── FOOTER ─── */}
       <footer className="w-full border-t-2 border-[#862937] bg-[#C4B883] py-8 text-sm font-black uppercase tracking-widest text-[#862937]">
-        <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="w-full px-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-[#862937] flex items-center justify-center text-[#C4B883] text-xs">BD</div>
             <span className="text-xl tracking-normal">BLOOPDOCS</span>
