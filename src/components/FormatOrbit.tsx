@@ -42,7 +42,7 @@ export default function FormatOrbit() {
       <div className="max-w-4xl mx-auto px-4 relative z-10 w-full flex flex-col items-center">
         
         {/* Section Header */}
-        <div className="text-center mb-12 select-none max-w-2xl">
+        <div className="text-center mb-12 select-none max-w-2xl font-black">
           <div className="inline-flex items-center gap-1.5 px-4 py-1.5 border-2 border-[#862937] bg-[#B9A071] text-[10px] font-black uppercase tracking-widest text-[#862937] mb-6 shadow-[2px_2px_0px_0px_#862937]">
             <Cpu className="w-4 h-4" />
             Parallel Format Engine
@@ -56,49 +56,69 @@ export default function FormatOrbit() {
         </div>
 
         {/* Static Document Card Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 w-full mb-10">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-6 w-full mb-12">
           {SUPPORTED_NODES.map((node, index) => {
             const isActive = activeIndex === index;
+            
+            // Calculate dynamic font sizes inside the banner based on text length
+            const textClass = node.ext.length > 5 
+              ? "text-[8px] tracking-tighter font-extrabold" 
+              : node.ext.length > 4 
+              ? "text-[9px] tracking-tight font-black" 
+              : "text-[10px] tracking-wider font-black";
+
             return (
               <div
                 key={node.ext}
                 onMouseEnter={() => setActiveIndex(index)}
-                className={`flex flex-col items-center justify-center p-5 border-2 select-none cursor-pointer transition-all duration-200 ${
-                  isActive ? "bg-white translate-x-[-2px] translate-y-[-2px]" : "bg-white"
+                className={`flex flex-col items-center justify-center p-6 border-2 select-none cursor-pointer transition-all duration-200 ${
+                  isActive ? "bg-white translate-x-[-2px] translate-y-[-2px]" : "bg-white hover:translate-x-[-1px] hover:translate-y-[-1px]"
                 }`}
                 style={{
                   borderColor: node.nativeColor,
-                  color: node.nativeColor,
                   boxShadow: isActive 
                     ? `6px 6px 0px 0px ${node.nativeColor}` 
                     : `4px 4px 0px 0px ${node.nativeColor}`
                 }}
               >
-                {/* Document SVG Icon with format name centered */}
-                <div className="relative w-14 h-18 flex items-center justify-center mb-3">
-                  <svg 
-                    viewBox="0 0 24 24" 
-                    className="absolute inset-0 w-full h-full stroke-[1.8] fill-[#FAFAFA] transition-colors duration-200"
-                    style={{ stroke: node.nativeColor }}
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
+                {/* Premium, High-Fidelity NATIVE Document File Page Icon */}
+                <div 
+                  className="relative w-[60px] h-[76px] bg-white border-2 transition-all duration-200 mb-4 overflow-hidden flex flex-col justify-between"
+                  style={{
+                    borderColor: node.nativeColor,
+                    // Folded corner clip-path
+                    clipPath: "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%)"
+                  }}
+                >
+                  {/* Folded corner triangle decoration inside */}
+                  <div 
+                    className="absolute top-0 right-0 w-[12px] h-[12px] bg-[#FAFAFA] border-b-2 border-l-2 z-10"
+                    style={{
+                      borderColor: node.nativeColor,
+                    }}
+                  />
+
+                  {/* Aesthetic document lines representing content lines in a real file */}
+                  <div className="pt-4 px-3 space-y-1 z-0 select-none opacity-20 pointer-events-none">
+                    <div className="w-[80%] h-[1.5px]" style={{ backgroundColor: node.nativeColor }} />
+                    <div className="w-[90%] h-[1.5px]" style={{ backgroundColor: node.nativeColor }} />
+                    <div className="w-[60%] h-[1.5px]" style={{ backgroundColor: node.nativeColor }} />
+                  </div>
+
+                  {/* Horizontal Colored Branding Banner in the bottom-middle of the sheet */}
+                  <div 
+                    className="w-full h-5 flex items-center justify-center text-white mb-2 z-10 shadow-sm border-t border-b border-black/10 select-none"
+                    style={{ backgroundColor: node.nativeColor }}
                   >
-                    {/* Standard Brutalist Document page shape with folder corner */}
-                    <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
-                    <path d="M15 2v7h7" />
-                  </svg>
-                  
-                  {/* Format Label Text inside Document */}
-                  <span 
-                    className="relative z-10 text-[10px] font-black uppercase tracking-tighter mt-4 select-none"
-                    style={{ color: node.nativeColor }}
-                  >
-                    {node.ext}
-                  </span>
+                    <span className={`${textClass} uppercase leading-none`}>
+                      {node.ext}
+                    </span>
+                  </div>
                 </div>
                 
+                {/* Brand label below the icon */}
                 <span 
-                  className="text-[8px] font-black uppercase tracking-widest opacity-80"
+                  className="text-[9px] font-black uppercase tracking-widest text-center select-none"
                   style={{ color: node.nativeColor }}
                 >
                   {node.brand}
