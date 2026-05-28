@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Cpu, Zap, Eye } from "lucide-react";
+import { Cpu } from "lucide-react";
 
 interface FormatNode {
   ext: string;
@@ -27,9 +27,7 @@ const SUPPORTED_NODES: FormatNode[] = [
 ];
 
 export default function FormatOrbit() {
-  const [activeIndex, setActiveIndex] = useState<number>(0); // Default to PDF (index 0)
-
-  const activeNode = SUPPORTED_NODES[activeIndex];
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   return (
     <section 
@@ -51,14 +49,14 @@ export default function FormatOrbit() {
             Universal Preservations
           </h2>
           <p className="text-xs font-bold tracking-widest uppercase text-[#903635]">
-            Hover over any document card below to analyze translation benchmarks and check latency indices.
+            Experience local desktop-grade compilation speeds across all major document formats.
           </p>
         </div>
 
         {/* Static Document Card Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-6 w-full mb-12">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-6 w-full">
           {SUPPORTED_NODES.map((node, index) => {
-            const isActive = activeIndex === index;
+            const isHovered = hoveredIndex === index;
             
             // Calculate dynamic font sizes inside the banner based on text length
             const textClass = node.ext.length > 5 
@@ -70,13 +68,14 @@ export default function FormatOrbit() {
             return (
               <div
                 key={node.ext}
-                onMouseEnter={() => setActiveIndex(index)}
+                onMouseEnter={() => setHoveredIndex(index)}
+                onMouseLeave={() => setHoveredIndex(null)}
                 className={`flex flex-col items-center justify-center p-6 border-2 select-none cursor-pointer transition-all duration-200 ${
-                  isActive ? "bg-white translate-x-[-2px] translate-y-[-2px]" : "bg-white hover:translate-x-[-1px] hover:translate-y-[-1px]"
+                  isHovered ? "bg-white translate-x-[-2px] translate-y-[-2px]" : "bg-white"
                 }`}
                 style={{
                   borderColor: node.nativeColor,
-                  boxShadow: isActive 
+                  boxShadow: isHovered 
                     ? `6px 6px 0px 0px ${node.nativeColor}` 
                     : `4px 4px 0px 0px ${node.nativeColor}`
                 }}
@@ -127,78 +126,7 @@ export default function FormatOrbit() {
             );
           })}
         </div>
-
-        {/* Dynamic Tooltip Detail Card (Always populated, no placeholder!) */}
-        <div className="w-full min-h-[160px] flex items-center justify-center">
-          <div 
-            key={activeNode.ext}
-            className="w-full p-6 border-4 bg-white animate-fade-in flex flex-col md:flex-row items-center justify-between gap-6"
-            style={{ 
-              borderColor: activeNode.nativeColor, 
-              boxShadow: `6px 6px 0px 0px ${activeNode.nativeColor}`
-            }}
-          >
-            <div className="space-y-2 text-center md:text-left flex-1">
-              <div className="flex flex-col md:flex-row items-center gap-3">
-                <h4 
-                  className="text-lg font-black flex items-center gap-2"
-                  style={{ color: activeNode.nativeColor }}
-                >
-                  {activeNode.name}
-                  <span 
-                    className="text-[10px] px-2.5 py-0.5 border-2 font-black tracking-widest uppercase shadow-[2px_2px_0px_0px_currentColor]"
-                    style={{ 
-                      borderColor: activeNode.nativeColor, 
-                      color: activeNode.nativeColor,
-                      backgroundColor: `${activeNode.nativeColor}15`
-                    }}
-                  >
-                    {activeNode.ext}
-                  </span>
-                </h4>
-              </div>
-              <p className="text-xs text-slate-700 font-medium leading-relaxed max-w-lg normal-case">
-                {activeNode.desc}
-              </p>
-            </div>
-            
-            {/* Metrics block */}
-            <div 
-              className="flex gap-4 border-t md:border-t-0 md:border-l-2 border-dashed pt-6 md:pt-0 md:pl-6 w-full md:w-auto shrink-0 justify-around select-none"
-              style={{ borderColor: activeNode.nativeColor }}
-            >
-              <div className="text-center min-w-[70px]">
-                <div className="text-[8px] text-slate-500 uppercase tracking-widest font-black mb-1.5">Fidelity</div>
-                <div 
-                  className="text-sm font-black flex items-center justify-center gap-1"
-                  style={{ color: activeNode.nativeColor }}
-                >
-                  <Zap className="w-3.5 h-3.5 fill-current stroke-none" />
-                  {activeNode.fidelity}
-                </div>
-              </div>
-              
-              <div className="text-center min-w-[70px]">
-                <div className="text-[8px] text-slate-500 uppercase tracking-widest font-black mb-1.5">Latency</div>
-                <div className="text-sm font-black text-slate-800 flex items-center justify-center gap-1">
-                  <Eye className="w-3.5 h-3.5" style={{ color: activeNode.nativeColor }} />
-                  {activeNode.speed}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(6px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-          animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-      `}</style>
     </section>
   );
 }
