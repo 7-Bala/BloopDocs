@@ -31,16 +31,6 @@ export function useTypewriter(
     const letters = el.querySelectorAll(".tw-char");
     if (letters.length === 0) return;
 
-    // Set initial state for organic "writing on hand" slide-up and slant effect
-    // We hide from right to left using clipPath: inset(0% 100% 0% 0%)
-    gsap.set(letters, {
-      opacity: 0,
-      y: 8,
-      rotation: -3,
-      clipPath: "inset(0% 100% 0% 0%)",
-      visibility: "visible"
-    });
-
     const tl = gsap.timeline({ delay: 0.5 });
     let currentTime = 0;
 
@@ -48,44 +38,65 @@ export function useTypewriter(
       const char = letter.textContent || "";
       const isSpace = char === " " || char === "\xa0";
       
-      // Calculate custom delay for human-like typing cadence (writing by hand)
-      let delay = 0.05 + Math.random() * 0.06; // base cadence: 50ms - 110ms
+      // Calculate drawing duration based on letter complexity
+      const duration = isSpace ? 0 : getWritingDuration(char);
+
+      // Calculate organic transition delay before pen starts drawing this letter
+      let transitionDelay = 0.02 + Math.random() * 0.04; // standard transit delay: 20ms - 60ms
       
       const prevLetter = letters[i - 1];
       const prevChar = prevLetter ? prevLetter.textContent || "" : "";
       
       // Pause at the line break boundary between CONVERT (length 7) and ANYTHING. (index 7 onwards)
       if (i === 7) {
-        delay += 0.7 + Math.random() * 0.3; // 700ms - 1000ms pause for the line break
+        transitionDelay += 0.8 + Math.random() * 0.3; // 800ms - 1100ms pause for line break
       } else if (char === "." || char === "," || char === "!" || char === "?") {
-        delay += 0.3 + Math.random() * 0.2; // pause before punctuation
+        transitionDelay += 0.2 + Math.random() * 0.2; // pause before punctuation
       } else if (prevChar === " " || prevChar === "\xa0") {
-        delay += 0.1 + Math.random() * 0.1; // pause between words
+        transitionDelay += 0.15 + Math.random() * 0.15; // pause between words
       } else {
-        // Occasional natural pause/hesitation (e.g. 5% chance of a 100-250ms pause)
+        // Occasional natural pen hesitation (e.g. 5% chance of a 100-200ms pause)
         if (Math.random() < 0.05 && i > 0) {
-          delay += 0.1 + Math.random() * 0.15;
+          transitionDelay += 0.1 + Math.random() * 0.1;
         }
       }
 
-      currentTime += delay;
+      currentTime += transitionDelay;
 
       if (isSpace) {
-        return; // spaces don't need drawing animation
+        return; // spaces don't draw
       }
 
-      const duration = getWritingDuration(char);
+      // Wabi-sabi organic handwriting settle targets (minor differences in height and angle)
+      const targetRot = -1.2 + Math.random() * 2.4; // final slant: -1.2deg to +1.2deg
+      const targetY = -1.0 + Math.random() * 2.0;   // final height: -1px to +1px
+      
+      // Starting slants are more extreme as the hand approaches the page
+      const startRot = targetRot - (4.0 + Math.random() * 3.0);
+      const startY = targetY + (6.0 + Math.random() * 4.0);
 
-      // Organic, smooth hand-written sketch effect: reveals left-to-right using clipPath
+      // Set character starting properties on the client
+      gsap.set(letter, {
+        opacity: 0,
+        y: startY,
+        rotation: startRot,
+        clipPath: "inset(0% 100% 0% 0%)",
+        visibility: "visible"
+      });
+
+      // Strict sequential drawing: next letter starts only AFTER this duration completes
       tl.to(letter, {
         opacity: 1,
-        y: 0,
-        rotation: 0,
+        y: targetY,
+        rotation: targetRot,
         clipPath: "inset(0% 0% 0% 0%)",
         duration: duration,
-        ease: "power1.inOut", // smooth organic hand writing ease
+        ease: "sine.inOut", // smooth organic sketch draw
         force3D: true,
       }, currentTime);
+
+      // Advance current time by the exact duration it took to draw this letter!
+      currentTime += duration;
     });
 
     // Fade out cursor after typing finishes
