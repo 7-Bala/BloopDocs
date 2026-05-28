@@ -7,12 +7,12 @@ import FloatingDocCard from "@/components/FloatingDocCard";
 import { useHeroParallax } from "@/hooks/useGsapTimeline";
 
 const FLOATING_DOCS = [
-  { ext: "PDF", name: "report.pdf", brandColor: "#FF0000", speedX: -1.2, speedY: -0.8, style: { left: "8%", top: "15%" } },
-  { ext: "DOCX", name: "resume.docx", brandColor: "#2B579A", speedX: 1.4, speedY: -1.0, style: { right: "8%", top: "12%" } },
-  { ext: "PAGES", name: "novel.pages", brandColor: "#F98D29", speedX: -1.6, speedY: 1.2, style: { left: "5%", bottom: "20%" } },
-  { ext: "XLSX", name: "budget.xlsx", brandColor: "#217346", speedX: 1.2, speedY: 0.9, style: { right: "5%", bottom: "16%" } },
-  { ext: "KEY", name: "pitch.key", brandColor: "#007AFF", speedX: -0.8, speedY: -1.4, style: { left: "20%", top: "50%" } },
-  { ext: "PPTX", name: "deck.pptx", brandColor: "#D24726", speedX: 1.1, speedY: 1.3, style: { right: "20%", bottom: "45%" } },
+  { ext: "PDF", name: "report.pdf", brandColor: "#FF0000", speedX: -1.2, speedY: -0.8, style: { left: "1%", top: "10%" } },
+  { ext: "DOCX", name: "resume.docx", brandColor: "#2B579A", speedX: 1.4, speedY: -1.0, style: { right: "1%", top: "8%" } },
+  { ext: "PAGES", name: "novel.pages", brandColor: "#F98D29", speedX: -1.6, speedY: 1.2, style: { left: "0%", bottom: "12%" } },
+  { ext: "XLSX", name: "budget.xlsx", brandColor: "#217346", speedX: 1.2, speedY: 0.9, style: { right: "0%", bottom: "10%" } },
+  { ext: "KEY", name: "pitch.key", brandColor: "#007AFF", speedX: -0.8, speedY: -1.4, style: { left: "4%", top: "44%" } },
+  { ext: "PPTX", name: "deck.pptx", brandColor: "#D24726", speedX: 1.1, speedY: 1.3, style: { right: "4%", bottom: "40%" } },
 ];
 
 export default function Home() {
@@ -31,27 +31,36 @@ export default function Home() {
         ref={heroContainerRef}
         className="w-full relative z-20 flex flex-col items-center justify-center pt-24 pb-12 px-6 mt-12 border-b-2 border-[#862937] min-h-[420px] md:min-h-[500px]"
       >
-        {/* Floating document themed cards */}
-        {FLOATING_DOCS.map((doc, idx) => (
-          <div
-            key={idx}
-            ref={(el) => {
-              if (cardsRef.current) {
-                cardsRef.current[idx] = el;
-              }
-            }}
-            data-speed-x={doc.speedX}
-            data-speed-y={doc.speedY}
-            className="hidden lg:block absolute"
-            style={doc.style}
-          >
-            <FloatingDocCard
-              ext={doc.ext}
-              name={doc.name}
-              brandColor={doc.brandColor}
-            />
+        {/* Alignment Wrapper: Locks boundaries to max-w-5xl and prevents offscreen clipping */}
+        <div className="absolute inset-0 w-full max-w-5xl mx-auto pointer-events-none z-10 hidden lg:block">
+          <div className="relative w-full h-full">
+            {/* Floating document themed cards */}
+            {FLOATING_DOCS.map((doc, idx) => (
+              <div
+                key={idx}
+                ref={(el) => {
+                  if (cardsRef.current) {
+                    cardsRef.current[idx] = el;
+                  }
+                }}
+                className="absolute pointer-events-auto"
+                style={doc.style}
+              >
+                <div
+                  className="parallax-inner"
+                  data-speed-x={doc.speedX}
+                  data-speed-y={doc.speedY}
+                >
+                  <FloatingDocCard
+                    ext={doc.ext}
+                    name={doc.name}
+                    brandColor={doc.brandColor}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
 
         <h1 className="text-[6rem] md:text-[12rem] font-black tracking-normal text-[#862937] mb-8 text-center leading-[0.85] uppercase relative z-30 select-none">
           CONVERT <br className="hidden md:block"/> ANYTHING.
