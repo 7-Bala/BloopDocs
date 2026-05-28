@@ -50,15 +50,72 @@ export default function HandwrittenTitle() {
       const convertBBox = textConvert.getBBox();
       const anythingBBox = textAnything.getBBox();
 
-      // 2. Add a tiny grace padding (6px) so the pen starts slightly before and ends slightly after the text
+      // 2. Relative peaks and valleys for each character shape to trace cursive handwriting
+      const convertPoints = [
+        { x: 0.0, y: 140 }, // Start C
+        { x: 0.03, y: 120 }, // Top of C
+        { x: 0.08, y: 180 }, // Bottom of C
+        { x: 0.15, y: 160 }, // Connect C to o
+        { x: 0.20, y: 145 }, // Top of o
+        { x: 0.25, y: 175 }, // Bottom of o
+        { x: 0.28, y: 145 }, // Loop of o
+        { x: 0.33, y: 175 }, // Connect to n (bottom)
+        { x: 0.38, y: 145 }, // Top of n (first arch)
+        { x: 0.42, y: 175 }, // Bottom of n (first arch)
+        { x: 0.46, y: 145 }, // Top of n (second arch)
+        { x: 0.50, y: 175 }, // Bottom of n
+        { x: 0.55, y: 150 }, // Top of v
+        { x: 0.60, y: 175 }, // Bottom of v
+        { x: 0.64, y: 150 }, // Right side of v
+        { x: 0.68, y: 145 }, // Loop of e
+        { x: 0.72, y: 175 }, // Bottom of e
+        { x: 0.77, y: 145 }, // Top of r
+        { x: 0.81, y: 145 }, // Shoulder of r
+        { x: 0.85, y: 175 }, // Bottom of r
+        { x: 0.90, y: 95 },  // Top of t
+        { x: 0.93, y: 175 }, // Bottom of t
+        { x: 1.0, y: 160 }   // Finish stroke
+      ];
+
+      const anythingPoints = [
+        { x: 0.0, y: 285 },  // Start A
+        { x: 0.05, y: 220 }, // Top of A
+        { x: 0.09, y: 300 }, // Bottom of A (left)
+        { x: 0.12, y: 275 }, // Cross of A
+        { x: 0.15, y: 300 }, // Connect to n
+        { x: 0.20, y: 270 }, // Top of n (first arch)
+        { x: 0.24, y: 300 }, // Bottom of n
+        { x: 0.28, y: 270 }, // Top of n (second arch)
+        { x: 0.32, y: 300 }, // Bottom of n
+        { x: 0.36, y: 325 }, // Loop of y (descender)
+        { x: 0.40, y: 295 }, // Exit of y
+        { x: 0.45, y: 220 }, // Top of t
+        { x: 0.48, y: 300 }, // Bottom of t
+        { x: 0.52, y: 255 }, // Top of h
+        { x: 0.56, y: 300 }, // Bottom of h
+        { x: 0.60, y: 270 }, // Top of i
+        { x: 0.63, y: 300 }, // Bottom of i
+        { x: 0.67, y: 270 }, // Top of n (first arch)
+        { x: 0.70, y: 300 }, // Bottom of n
+        { x: 0.74, y: 270 }, // Top of n (second arch)
+        { x: 0.77, y: 300 }, // Bottom of n
+        { x: 0.82, y: 350 }, // Bottom loop of g (descender)
+        { x: 0.88, y: 290 }, // Exit of g
+        { x: 0.95, y: 300 }, // Dot of .
+        { x: 1.0, y: 300 }   // Finish stroke
+      ];
+
+      // Add a tiny grace padding (6px) so the pen starts slightly before and ends slightly after the text
       const pad = 6;
       const xStartConv = convertBBox.x - pad;
       const xEndConv = convertBBox.x + convertBBox.width + pad;
-      const dConv = `M ${xStartConv} 150 Q ${(xStartConv + xEndConv) / 2 - 50} 115, ${(xStartConv + xEndConv) / 2} 150 T ${xEndConv} 150`;
+      const wConv = xEndConv - xStartConv;
+      const dConv = "M " + convertPoints.map(p => `${(xStartConv + p.x * wConv).toFixed(1)} ${p.y}`).join(" L ");
 
       const xStartAny = anythingBBox.x - pad;
       const xEndAny = anythingBBox.x + anythingBBox.width + pad;
-      const dAny = `M ${xStartAny} 280 Q ${(xStartAny + xEndAny) / 2 - 50} 240, ${(xStartAny + xEndAny) / 2} 280 T ${xEndAny} 280`;
+      const wAny = xEndAny - xStartAny;
+      const dAny = "M " + anythingPoints.map(p => `${(xStartAny + p.x * wAny).toFixed(1)} ${p.y}`).join(" L ");
 
       // 3. Update the path attributes dynamically
       pathConvert.setAttribute("d", dConv);
@@ -108,6 +165,7 @@ export default function HandwrittenTitle() {
       });
 
       // 1. Write "Convert" in one smooth, continuous calligraphic sweep
+      let prevMaxXConvert = 0;
       const objConvert = { val: 0 };
       tl.to(objConvert, {
         val: lenConvert,
@@ -116,7 +174,8 @@ export default function HandwrittenTitle() {
         onUpdate: () => {
           const pt = pathConvert.getPointAtLength(objConvert.val);
           gsap.set(pen, { x: pt.x, y: pt.y });
-          updateMaskPolygon(polyConvert, pt.x, pt.y);
+          prevMaxXConvert = Math.max(prevMaxXConvert, pt.x);
+          updateMaskPolygon(polyConvert, prevMaxXConvert, pt.y);
         }
       });
 
@@ -135,6 +194,7 @@ export default function HandwrittenTitle() {
       });
 
       // 3. Write "Anything." in one smooth, continuous calligraphic sweep
+      let prevMaxXAnything = 0;
       const objAnything = { val: 0 };
       tl.to(objAnything, {
         val: lenAnything,
@@ -143,7 +203,8 @@ export default function HandwrittenTitle() {
         onUpdate: () => {
           const pt = pathAnything.getPointAtLength(objAnything.val);
           gsap.set(pen, { x: pt.x, y: pt.y });
-          updateMaskPolygon(polyAnything, pt.x, pt.y);
+          prevMaxXAnything = Math.max(prevMaxXAnything, pt.x);
+          updateMaskPolygon(polyAnything, prevMaxXAnything, pt.y);
         }
       });
     });
