@@ -166,8 +166,8 @@ export default function HandwrittenTitle() {
           ref={penRef}
           style={{ display: "none", transformOrigin: "0px 0px" }}
         >
-          {/* Tilted pen group slanted at a natural writing angle (-35 degrees) */}
-          <g transform="rotate(-35)">
+          {/* Tilted pen group slanted at a natural right-handed writing angle (+35 degrees) */}
+          <g transform="rotate(35)">
             {/* 1. Golden Nib (Highly detailed two-tone gold) */}
             <path
               d="M 0 0 L -4 -10 L -8 -25 L 8 -25 L 4 -10 Z"
@@ -209,6 +209,14 @@ export default function HandwrittenTitle() {
             <rect x="-6.5" y="-55" width="13" height="4" fill="#B9A071" />
             <rect x="-5.5" y="-142" width="11" height="6" fill="#B9A071" />
             <path d="M 0 -55 L 0 -135" stroke="#B9A071" strokeWidth="0.8" strokeDasharray="3,3" />
+
+            {/* Golden Cap Clip */}
+            <path
+              d="M 0 -138 L 4 -138 L 5 -96 L 2 -92 L 0 -96 Z"
+              fill="#B9A071"
+              stroke="#862937"
+              strokeWidth="1.2"
+            />
 
             {/* 4. Elegant Right Hand holding the pen (perfectly color-themed beige/red) */}
             <g>
