@@ -38,11 +38,11 @@ export default function Home() {
           className="font-black text-[#862937] text-center uppercase select-none leading-[0.85] text-[clamp(4rem,15vw,12rem)]"
         >
           {"CONVERT".split("").map((ch, i) => (
-            <span key={`a${i}`} className="tw-char" style={{ visibility: "hidden" }}>{ch}</span>
+            <span key={`a${i}`} className="tw-char inline-block" style={{ visibility: "hidden" }}>{ch}</span>
           ))}
           <br />
           {"ANYTHING.".split("").map((ch, i) => (
-            <span key={`b${i}`} className="tw-char" style={{ visibility: "hidden" }}>{ch}</span>
+            <span key={`b${i}`} className="tw-char inline-block" style={{ visibility: "hidden" }}>{ch}</span>
           ))}
           <span
             ref={cursorRef}

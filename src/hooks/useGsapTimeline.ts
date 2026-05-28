@@ -11,6 +11,15 @@ if (typeof window !== "undefined") {
 /* ═══════════════════════════════════════════════════════════════════════════
    TYPEWRITER — deterministic per-char reveal, no randomness
    ═══════════════════════════════════════════════════════════════════════════ */
+function getWritingDuration(char: string): number {
+  const c = char.toUpperCase();
+  if (c === "." || c === "," || c === "!" || c === "?") return 0.18;
+  if (c === "I" || c === "T" || c === "L" || c === "F" || c === "J" || c === " ") return 0.28;
+  if (c === "C" || c === "E" || c === "H" || c === "K" || c === "P" || c === "U" || c === "V" || c === "Z") return 0.38;
+  // Complex letters with curves or many strokes
+  return 0.48; 
+}
+
 export function useTypewriter(
   containerRef: RefObject<HTMLHeadingElement | null>,
   cursorRef: RefObject<HTMLSpanElement | null>
@@ -22,43 +31,59 @@ export function useTypewriter(
     const letters = el.querySelectorAll(".tw-char");
     if (letters.length === 0) return;
 
-    // Set initial state for organic "writing on hand" slide-up effect
-    gsap.set(letters, { opacity: 0, y: 12, visibility: "visible" });
+    // Set initial state for organic "writing on hand" slide-up and slant effect
+    // We hide from right to left using clipPath: inset(0% 100% 0% 0%)
+    gsap.set(letters, {
+      opacity: 0,
+      y: 8,
+      rotation: -3,
+      clipPath: "inset(0% 100% 0% 0%)",
+      visibility: "visible"
+    });
 
     const tl = gsap.timeline({ delay: 0.5 });
     let currentTime = 0;
 
     letters.forEach((letter, i) => {
       const char = letter.textContent || "";
+      const isSpace = char === " " || char === "\xa0";
       
       // Calculate custom delay for human-like typing cadence (writing by hand)
-      let delay = 0.06 + Math.random() * 0.08; // base typing speed: 60ms - 140ms
+      let delay = 0.05 + Math.random() * 0.06; // base cadence: 50ms - 110ms
       
       const prevLetter = letters[i - 1];
       const prevChar = prevLetter ? prevLetter.textContent || "" : "";
       
       // Pause at the line break boundary between CONVERT (length 7) and ANYTHING. (index 7 onwards)
       if (i === 7) {
-        delay += 0.6 + Math.random() * 0.4; // 600ms - 1000ms pause for the line break
+        delay += 0.7 + Math.random() * 0.3; // 700ms - 1000ms pause for the line break
       } else if (char === "." || char === "," || char === "!" || char === "?") {
-        delay += 0.4 + Math.random() * 0.3; // 400ms - 700ms pause for punctuation
+        delay += 0.3 + Math.random() * 0.2; // pause before punctuation
       } else if (prevChar === " " || prevChar === "\xa0") {
-        delay += 0.15 + Math.random() * 0.15; // pause between words
+        delay += 0.1 + Math.random() * 0.1; // pause between words
       } else {
-        // Occasional natural pause/hesitation (e.g. 8% chance of a 150-300ms pause)
-        if (Math.random() < 0.08 && i > 0) {
-          delay += 0.15 + Math.random() * 0.2;
+        // Occasional natural pause/hesitation (e.g. 5% chance of a 100-250ms pause)
+        if (Math.random() < 0.05 && i > 0) {
+          delay += 0.1 + Math.random() * 0.15;
         }
       }
 
       currentTime += delay;
 
-      // Organic, smooth fade-in and slide-up for each character
+      if (isSpace) {
+        return; // spaces don't need drawing animation
+      }
+
+      const duration = getWritingDuration(char);
+
+      // Organic, smooth hand-written sketch effect: reveals left-to-right using clipPath
       tl.to(letter, {
         opacity: 1,
         y: 0,
-        duration: 0.18,
-        ease: "power2.out",
+        rotation: 0,
+        clipPath: "inset(0% 0% 0% 0%)",
+        duration: duration,
+        ease: "power1.inOut", // smooth organic hand writing ease
         force3D: true,
       }, currentTime);
     });
@@ -141,18 +166,6 @@ export function useDocumentDrop(
       }, scatterStart + i * 0.04);
     });
 
-    // Phase 4 — Collapse height to 0 since the page section is empty
-    const collapseStart = scatterStart + docs.length * 0.04 + 0.6;
-    tl.to(section, {
-      height: 0,
-      duration: 0.8,
-      ease: "power3.inOut",
-      onComplete: () => {
-        section.style.display = "none";
-        ScrollTrigger.refresh();
-      }
-    }, collapseStart);
-
     // Trigger: play once when section enters viewport, never reverse
     const st = ScrollTrigger.create({
       trigger: section,
@@ -174,8 +187,26 @@ export function useDocumentDrop(
       },
     });
 
+    // ScrollTrigger to instantly remove the empty section when it is fully scrolled past (above viewport)
+    // This completely eliminates visual scrolling glitches or jumping while height collapsing.
+    const removeTrigger = ScrollTrigger.create({
+      trigger: section,
+      start: "bottom top", // when bottom of the section leaves top of the viewport
+      onLeave: () => {
+        const height = section.offsetHeight;
+        if (height > 0) {
+          removeTrigger.disable();
+          section.style.display = "none";
+          section.style.height = "0px";
+          window.scrollTo(0, window.scrollY - height);
+          ScrollTrigger.refresh();
+        }
+      }
+    });
+
     return () => {
       st.kill();
+      removeTrigger.kill();
       tl.kill();
     };
   }, [sectionRef, docRefs, dustRef]);
