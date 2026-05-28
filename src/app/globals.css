@@ -6,25 +6,22 @@
  */
 
 :root {
-  /* Beige Palette */
   --beige-light: #C4B883;
   --beige-mid: #B9A071;
   --beige-dark: #AF8760;
-
-  /* Red Palette */
   --red-main: #862937;
   --red-accent: #903635;
-
   --background: var(--beige-light);
   --foreground: var(--red-main);
-  
-  --font-sans: var(--font-outfit); 
+  --font-sans: var(--font-outfit);
 }
 
-/* Hide ALL scrollbars globally — Firefox + IE + Chrome/Safari/Edge */
+/* Global reset: no scrollbars, no rounded corners, no shadows */
 * {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
 *::-webkit-scrollbar {
   display: none !important;
@@ -40,31 +37,24 @@ body {
   min-height: 100vh;
 }
 
-/* Brutalist Global Reset: Eradicate all rounded corners and shadows */
-* {
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-}
-
-/* Hard, flat accessible focus states */
+/* Accessible focus ring */
 *:focus-visible {
   outline: 2px solid var(--red-accent);
   outline-offset: 2px;
 }
 
-/* Hide default file input controls globally */
+/* Hide file inputs */
 input[type="file"] {
   display: none;
 }
 
-/* Custom silky-fast linear transition class */
+/* Safe transition: only background-color (never fights GSAP transforms) */
 .transition-brutalist {
-  transition: all 0.15s linear;
+  transition: background-color 0.15s linear;
 }
 
-/* --- Brutalist Animation Keyframes --- */
+/* ── Animation keyframes ── */
+
 @keyframes digital-flash {
   0% { background-color: var(--beige-mid); }
   25% { background-color: var(--beige-dark); }
@@ -103,12 +93,3 @@ input[type="file"] {
 .animate-blink {
   animation: blink 0.8s infinite steps(1);
 }
-
-@keyframes bounce-slow {
-  0%, 100% { transform: translateY(0) translateX(-50%); }
-  50% { transform: translateY(10px) translateX(-50%); }
-}
-.animate-bounce-slow {
-  animation: bounce-slow 1.8s ease-in-out infinite;
-}
-
