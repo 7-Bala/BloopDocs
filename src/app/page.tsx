@@ -5,6 +5,8 @@ import Navbar from "@/components/Navbar";
 import Converter from "@/components/Converter";
 import FloatingDocCard from "@/components/FloatingDocCard";
 import HandwrittenTitle from "@/components/HandwrittenTitle";
+import FormatOrbit from "@/components/FormatOrbit";
+import DocsSection from "@/components/DocsSection";
 import { useDocumentDrop, useConverterReveal } from "@/hooks/useGsapTimeline";
 
 const FALL_DOCS = [
@@ -83,10 +85,16 @@ export default function Home() {
         })}
       </div>
 
+      {/* ─── FORMAT ORBIT ─── */}
+      <FormatOrbit />
+
       {/* ─── CONVERTER ─── */}
       <div ref={converterRef} className="w-full py-24 bg-[#B9A071]">
         <Converter />
       </div>
+
+      {/* ─── TECHNICAL DOCUMENTATION ─── */}
+      <DocsSection />
 
       {/* ─── FOOTER ─── */}
       <footer className="w-full border-t-2 border-[#862937] bg-[#C4B883] py-8 text-sm font-black uppercase tracking-widest text-[#862937]">
