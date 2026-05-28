@@ -43,99 +43,98 @@ export function useTypewriter(
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   DOCUMENT DROP — scroll-scrubbed, CSS sticky does the viewport lock
+   DOCUMENT DROP — trigger-once, real-time playback
    
-   Layout:
-     outerRef = div height:300vh (scroll runway for the trigger)
-     Inside:  div.sticky.top-0.h-screen.overflow-hidden (viewport-locked panel)
-     docRefs  = absolute cards inside the sticky panel
-   
-   GSAP drives yPercent from -500 → 0 → -600 as user scrolls the 300vh.
+   Plays at normal GSAP speed when the section enters the viewport.
+   No scrub, no pin, no sticky — scrolling feels completely natural.
+   Does NOT reverse when scrolling back up.
    ═══════════════════════════════════════════════════════════════════════════ */
 export function useDocumentDrop(
-  outerRef: RefObject<HTMLDivElement | null>,
+  sectionRef: RefObject<HTMLDivElement | null>,
   docRefs: RefObject<(HTMLDivElement | null)[]>,
   dustRef: RefObject<HTMLDivElement | null>
 ) {
   useEffect(() => {
-    const outer = outerRef.current;
-    if (!outer) return;
+    const section = sectionRef.current;
+    if (!section) return;
 
     const docs = (docRefs.current || []).filter(Boolean) as HTMLDivElement[];
     if (docs.length === 0) return;
 
-    // Force GPU layer promotion on every card for jank-free compositing
-    gsap.set(docs, { yPercent: -500, opacity: 1, rotation: 0, x: 0, force3D: true, willChange: "transform, opacity" });
+    // Start hidden above the section (clipped by overflow:hidden)
+    gsap.set(docs, { y: -400, opacity: 1, rotation: 0, x: 0, force3D: true });
 
+    // Build the animation timeline (paused — ScrollTrigger will play it)
     const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: outer,
-        start: "top top",
-        end: "bottom bottom",
-        scrub: 0.5,            // tight tracking — no visible lag on fast scroll
-        invalidateOnRefresh: true,
+      paused: true,
+      onComplete: () => {
+        // Clean up will-change after animation is done
+        docs.forEach(d => { d.style.willChange = "auto"; });
       },
     });
 
-    // Phase 1 — Fall with smooth deceleration
-    // (bounce.out has direction reversals that look broken at high scrub speeds)
+    // Phase 1 — All cards fall quickly with tight stagger (0.08s between each)
     docs.forEach((doc, i) => {
       tl.to(doc, {
-        yPercent: 0,
+        y: 0,
         rotation: (i % 2 === 0 ? 1 : -1) * (2 + i * 1.5),
-        duration: 1,
-        ease: "power4.out",
+        duration: 0.7,
+        ease: "power3.out",
         force3D: true,
-      }, i * 0.2);
+      }, i * 0.08);
     });
 
-    // Phase 2 — Float
-    const floatTime = docs.length * 0.2 + 1;
+    // Phase 2 — Brief hover/float
+    const hoverStart = docs.length * 0.08 + 0.7;
     tl.to(docs, {
-      yPercent: -8,
-      duration: 0.5,
+      y: -12,
+      duration: 0.6,
       ease: "sine.inOut",
       force3D: true,
-    }, floatTime);
+    }, hoverStart);
 
-    // Phase 3 — Scatter upward
-    const scatterTime = floatTime + 0.6;
+    // Phase 3 — Scatter away
+    const scatterStart = hoverStart + 0.7;
     docs.forEach((doc, i) => {
       tl.to(doc, {
-        yPercent: -600,
-        x: (i % 2 === 0 ? -1 : 1) * (50 + i * 30),
-        rotation: (i % 2 === 0 ? -1 : 1) * (20 + i * 10),
+        y: -500,
+        x: (i % 2 === 0 ? -1 : 1) * (50 + i * 25),
+        rotation: (i % 2 === 0 ? -1 : 1) * (20 + i * 8),
         opacity: 0,
-        duration: 0.8,
+        duration: 0.6,
         ease: "power2.in",
         force3D: true,
-      }, scatterTime + i * 0.05);
+      }, scatterStart + i * 0.04);
     });
 
-    // Dust burst — fires once
-    let dustTrigger: ScrollTrigger | null = null;
-    dustTrigger = ScrollTrigger.create({
-      trigger: outer,
-      start: "30% top",
+    // Trigger: play once when section enters viewport, never reverse
+    const st = ScrollTrigger.create({
+      trigger: section,
+      start: "top 80%",
       once: true,
       onEnter: () => {
-        const container = dustRef.current;
-        if (!container) return;
-        docs.forEach((doc) => {
-          const r = doc.getBoundingClientRect();
-          const cr = container.getBoundingClientRect();
-          burstDust(container, r.left - cr.left + r.width / 2, r.bottom - cr.top);
-        });
+        tl.play();
+
+        // Dust burst after cards have mostly landed (~0.5s in)
+        setTimeout(() => {
+          const container = dustRef.current;
+          if (!container) return;
+          docs.forEach((doc) => {
+            const r = doc.getBoundingClientRect();
+            const cr = container.getBoundingClientRect();
+            burstDust(container, r.left - cr.left + r.width / 2, r.bottom - cr.top);
+          });
+        }, 500);
       },
     });
 
     return () => {
-      tl.scrollTrigger?.kill();
+      st.kill();
       tl.kill();
-      dustTrigger?.kill();
     };
-  }, [outerRef, docRefs, dustRef]);
+  }, [sectionRef, docRefs, dustRef]);
 }
+
 
 function burstDust(container: HTMLDivElement, cx: number, cy: number) {
   // 6 particles per card (not 12) — keeps total under 40 concurrent tweens

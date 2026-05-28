@@ -61,44 +61,42 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── DOCUMENT DROP ─── 
-           Outer = 300vh (scroll runway).
-           Inner = sticky 100vh panel that stays in viewport while you scroll. -->  */}
-      <div ref={outerDropRef} className="relative w-full" style={{ height: "300vh" }}>
-        <div
-          className="sticky top-0 left-0 w-full h-screen overflow-hidden bg-[#C4B883]"
-          style={{ contain: "layout style paint" }}
-        >
-          {/* dust layer */}
-          <div ref={dustRef} className="absolute inset-0 pointer-events-none z-30" />
+      {/* ─── DOCUMENT DROP ───
+           Simple section — animation triggers once on enter, scrolling stays natural */}
+      <div
+        ref={outerDropRef}
+        className="relative w-full overflow-hidden bg-[#C4B883]"
+        style={{ height: "80vh" }}
+      >
+        {/* dust layer */}
+        <div ref={dustRef} className="absolute inset-0 pointer-events-none z-30" />
 
-          {/* ground line */}
-          <div className="absolute left-12 right-12 z-10" style={{ bottom: "30%" }}>
-            <div className="w-full h-[2px] bg-[#862937] opacity-20" />
-          </div>
-
-          {/* label */}
-          <div className="absolute top-10 left-0 right-0 text-center z-40 pointer-events-none">
-            <p className="text-xs md:text-sm font-black uppercase tracking-[0.4em] text-[#862937] opacity-30">
-              Every format, handled
-            </p>
-          </div>
-
-          {/* cards — absolutely positioned across the width */}
-          {FALL_DOCS.map((doc, idx) => {
-            const pct = 6 + idx * 15; // 6%, 21%, 36%, 51%, 66%, 81%
-            return (
-              <div
-                key={idx}
-                ref={(el) => { docRefs.current[idx] = el; }}
-                className="absolute z-20"
-                style={{ width: 112, height: 144, left: `${pct}%`, bottom: "30%", willChange: "transform, opacity" }}
-              >
-                <FloatingDocCard ext={doc.ext} name={doc.name} brandColor={doc.brandColor} />
-              </div>
-            );
-          })}
+        {/* ground line */}
+        <div className="absolute left-12 right-12 z-10" style={{ bottom: "30%" }}>
+          <div className="w-full h-[2px] bg-[#862937] opacity-20" />
         </div>
+
+        {/* label */}
+        <div className="absolute top-10 left-0 right-0 text-center z-40 pointer-events-none">
+          <p className="text-xs md:text-sm font-black uppercase tracking-[0.4em] text-[#862937] opacity-30">
+            Every format, handled
+          </p>
+        </div>
+
+        {/* cards */}
+        {FALL_DOCS.map((doc, idx) => {
+          const pct = 6 + idx * 15;
+          return (
+            <div
+              key={idx}
+              ref={(el) => { docRefs.current[idx] = el; }}
+              className="absolute z-20"
+              style={{ width: 112, height: 144, left: `${pct}%`, bottom: "30%", willChange: "transform, opacity" }}
+            >
+              <FloatingDocCard ext={doc.ext} name={doc.name} brandColor={doc.brandColor} />
+            </div>
+          );
+        })}
       </div>
 
       {/* ─── CONVERTER ─── */}
