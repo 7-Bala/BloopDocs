@@ -277,7 +277,8 @@ export function useDashboardStagger(
  */
 export function useHeroParallax(
   containerRef: RefObject<HTMLDivElement | null>,
-  cardsRef: RefObject<(HTMLDivElement | null)[]>
+  cardsRef: RefObject<(HTMLDivElement | null)[]>,
+  converterRef: RefObject<HTMLDivElement | null>
 ) {
   useEffect(() => {
     if (!containerRef.current || !cardsRef.current) return;
@@ -286,48 +287,66 @@ export function useHeroParallax(
       const wrappers = cardsRef.current.filter((card) => card !== null) as HTMLDivElement[];
       if (wrappers.length === 0) return;
 
-      // 1. Mount Stagger Animation (parachutes and bounces sheets into position)
-      gsap.fromTo(
-        wrappers,
-        { 
-          opacity: 0, 
-          scale: 0.4, 
-          rotation: (i) => (i % 2 === 0 ? -12 : 12), 
-          y: 80 
-        },
-        {
-          opacity: 1,
-          scale: 1,
-          rotation: 0,
-          y: 0,
-          duration: 1.4,
-          stagger: 0.12,
-          ease: "elastic.out(1, 0.75)",
-          delay: 0.4,
-        }
-      );
+      // 1. Initial State: Force wrappers to be fully transparent on mount (appear strictly on scroll!)
+      gsap.set(wrappers, { opacity: 0, scale: 0.4, y: 80 });
 
-      // 2. ScrollTrigger Dispersion Logic (fade out and push cards apart)
-      gsap.to(wrappers, {
-        y: (i) => {
-          // Odd index elements float up, even index elements float down
-          return i % 2 === 0 ? -160 : 160;
-        },
-        x: (i) => {
-          // Left side cards move further left, right side cards move further right
-          return i < 3 ? -100 : 100;
-        },
-        opacity: 0,
-        ease: "none",
+      // 2. Coordinated ScrollTrigger timeline for document cards
+      const tlDocs = gsap.timeline({
         scrollTrigger: {
           trigger: containerRef.current,
           start: "top top",
-          end: "bottom 30%",
-          scrub: 1.2, // Silky smooth scroll catch-up scrub
+          end: "bottom 10%",
+          scrub: 1.2, // Silky smooth scroll scrubbing
         }
       });
 
-      // 3. Mouse Move Parallax Logic on the inner cards
+      // Scroll Phase 1: Documents parachute, scale up, and fade in staggered
+      tlDocs.to(wrappers, {
+        opacity: 1,
+        scale: 1,
+        y: 0,
+        stagger: 0.08,
+        duration: 1.5,
+        ease: "power2.out"
+      });
+
+      // Scroll Phase 2: Documents disperse outwards and fade away
+      tlDocs.to(wrappers, {
+        y: (i) => (i % 2 === 0 ? -180 : 180),
+        x: (i) => (i < 3 ? -120 : 120),
+        opacity: 0,
+        duration: 1.8,
+        ease: "power2.inOut",
+        delay: 0.3 // brief pause in visual float
+      });
+
+      // 3. ScrollTrigger for the Converter Section sliding entry
+      if (converterRef.current) {
+        gsap.fromTo(
+          converterRef.current,
+          { 
+            opacity: 0, 
+            y: 150, 
+            scale: 0.95,
+            rotationX: 8, // slight 3D perspective entry angle
+          },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            rotationX: 0,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: converterRef.current,
+              start: "top 90%", // slide starts as top reaches 90% viewport
+              end: "top 40%",   // full locked alignment by 40%
+              scrub: 1.5,
+            }
+          }
+        );
+      }
+
+      // 4. Mouse Move Parallax Logic on the inner cards
       const innerCards = wrappers
         .map((w) => w.querySelector(".parallax-inner"))
         .filter((el) => el !== null) as HTMLDivElement[];
@@ -358,6 +377,54 @@ export function useHeroParallax(
     }, containerRef);
 
     return () => ctx.revert();
-  }, [containerRef, cardsRef]);
+  }, [containerRef, cardsRef, converterRef]);
+}
+
+/**
+ * Hook for brutalist terminal typewriter styling on hero header.
+ * Staggers characters from hidden to block, then fades out the blinking cursor.
+ */
+export function useTypewriter(
+  containerRef: RefObject<HTMLHeadingElement | null>,
+  cursorRef: RefObject<HTMLSpanElement | null>
+) {
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const ctx = gsap.context(() => {
+      const letters = containerRef.current!.querySelectorAll(".typewriter-letter");
+      if (letters.length === 0) return;
+
+      const tl = gsap.timeline();
+
+      // Typing stagger - 0.05s between each letter
+      tl.fromTo(
+        letters,
+        { display: "none" },
+        {
+          display: "inline-block",
+          stagger: 0.05,
+          ease: "none",
+          duration: 0.01,
+        }
+      );
+
+      // Fade out block cursor smoothly after typing completes
+      if (cursorRef.current) {
+        tl.to(cursorRef.current, {
+          opacity: 0,
+          duration: 0.5,
+          delay: 0.4,
+          onComplete: () => {
+            if (cursorRef.current) {
+              cursorRef.current.style.display = "none";
+            }
+          }
+        });
+      }
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, [containerRef, cursorRef]);
 }
 
