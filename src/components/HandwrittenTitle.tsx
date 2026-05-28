@@ -218,54 +218,6 @@ export default function HandwrittenTitle() {
               strokeWidth="1.2"
             />
 
-            {/* 4. Elegant Right Hand holding the pen (perfectly color-themed beige/red) */}
-            <g>
-              {/* Middle Finger (curves under the pen barrel) */}
-              <path
-                d="M -7 -40 C -15 -42, -22 -35, -22 -25 C -22 -15, -12 -12, -4 -20"
-                fill="#C4B883"
-                stroke="#862937"
-                strokeWidth="2"
-                strokeLinejoin="round"
-              />
-              
-              {/* Thumb (grips the left side of the grip section) */}
-              <path
-                d="M -6 -28 C -18 -26, -26 -16, -24 -6 C -22 4, -10 6, -2 -14"
-                fill="#B9A071"
-                stroke="#862937"
-                strokeWidth="2"
-                strokeLinejoin="round"
-              />
-              
-              {/* Index Finger (grips the right/top side of the grip section) */}
-              <path
-                d="M 6 -32 C 16 -34, 30 -28, 32 -14 C 34 0, 24 6, 12 -18"
-                fill="#B9A071"
-                stroke="#862937"
-                strokeWidth="2"
-                strokeLinejoin="round"
-              />
-
-              {/* Back of the Hand & Palm (extends down-right) */}
-              <path
-                d="M 32 -14 C 44 -12, 54 4, 48 24 C 42 44, 18 44, 8 24 C 2 12, 8 2, 12 -18"
-                fill="#C4B883"
-                stroke="#862937"
-                strokeWidth="2"
-                strokeLinejoin="round"
-              />
-
-              {/* Sleeve / Cuff (luxury crimson jacket sleeve with gold cufflink) */}
-              <path
-                d="M 48 24 C 54 26, 78 50, 78 50 L 58 70 C 58 70, 38 44, 42 44 Z"
-                fill="#862937"
-                stroke="#862937"
-                strokeWidth="2"
-              />
-              {/* Golden Cufflink */}
-              <circle cx="56" cy="46" r="3" fill="#B9A071" stroke="#862937" strokeWidth="1" />
-            </g>
           </g>
         </g>
       </svg>
