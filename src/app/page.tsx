@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Converter from "@/components/Converter";
 import FloatingDocCard from "@/components/FloatingDocCard";
 import HandwrittenTitle from "@/components/HandwrittenTitle";
 import FormatOrbit from "@/components/FormatOrbit";
 import DocsSection from "@/components/DocsSection";
+import BrutalistModal from "@/components/BrutalistModal";
 import { useDocumentDrop, useConverterReveal } from "@/hooks/useGsapTimeline";
 
 const FALL_DOCS = [
@@ -24,12 +25,17 @@ export default function Home() {
   const dustRef = useRef<HTMLDivElement | null>(null);
   const converterRef = useRef<HTMLDivElement | null>(null);
 
+  const [activeModal, setActiveModal] = useState<"supported-files" | "docs" | null>(null);
+
   useDocumentDrop(outerDropRef, docRefs, dustRef);
   useConverterReveal(converterRef);
 
   return (
     <main className="w-full bg-[#C4B883]">
-      <Navbar />
+      <Navbar 
+        onOpenSupportedFiles={() => setActiveModal("supported-files")}
+        onOpenDocs={() => setActiveModal("docs")}
+      />
 
       {/* ─── HERO ─── */}
       <section className="w-full min-h-screen flex flex-col items-center justify-center px-6 pt-20 border-b-2 border-[#862937] bg-[#C4B883]">
@@ -85,16 +91,10 @@ export default function Home() {
         })}
       </div>
 
-      {/* ─── FORMAT ORBIT ─── */}
-      <FormatOrbit />
-
       {/* ─── CONVERTER ─── */}
       <div ref={converterRef} className="w-full py-24 bg-[#B9A071]">
         <Converter />
       </div>
-
-      {/* ─── TECHNICAL DOCUMENTATION ─── */}
-      <DocsSection />
 
       {/* ─── FOOTER ─── */}
       <footer className="w-full border-t-2 border-[#862937] bg-[#C4B883] py-8 text-sm font-black uppercase tracking-widest text-[#862937]">
@@ -134,6 +134,24 @@ export default function Home() {
           <p className="tracking-widest text-xs font-black select-none">© {new Date().getFullYear()} BLOOPDOCS</p>
         </div>
       </footer>
+
+      {/* Brutalist Overlay Modals */}
+      <BrutalistModal
+        isOpen={activeModal === "supported-files"}
+        onClose={() => setActiveModal(null)}
+        title="Supported Document Formats"
+      >
+        <FormatOrbit />
+      </BrutalistModal>
+
+      {/* Technical Documentation Modal */}
+      <BrutalistModal
+        isOpen={activeModal === "docs"}
+        onClose={() => setActiveModal(null)}
+        title="Technical Documentation"
+      >
+        <DocsSection />
+      </BrutalistModal>
     </main>
   );
 }
