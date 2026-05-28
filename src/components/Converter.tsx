@@ -1,5 +1,18 @@
 "use client";
 
+interface ElectronAPI {
+  convertFiles: (data: {
+    files: { name: string; data: Uint8Array }[];
+    targetExt: string;
+  }) => Promise<Uint8Array>;
+}
+
+declare global {
+  interface Window {
+    electronAPI?: ElectronAPI;
+  }
+}
+
 import React, { useState, useRef, DragEvent, ChangeEvent, useEffect } from "react";
 import { UploadCloud, Trash2, ArrowRight, Download, CheckSquare, RefreshCw } from "lucide-react";
 import { useToast } from "./Toast";
@@ -139,6 +152,70 @@ export default function Converter() {
       timeoutsRef.current.push(t);
     };
 
+    // Check if running inside Electron Desktop App
+    const isDesktop = typeof window !== "undefined" && !!window.electronAPI;
+
+    if (isDesktop && window.electronAPI) {
+      addLogWithDelay("System detected: Desktop Client Mode active.", 600);
+      addLogWithDelay("Bridging files over secure native IPC channel...", 1500);
+      addLogWithDelay(`Mounting local files and executing conversion to format: ${targetExt.toUpperCase()}...`, 3200);
+      addLogWithDelay("Spawning local headless LibreOffice compiler instance...", 5200);
+      addLogWithDelay("Rebuilding document spacing and rendering layout geometry...", 7800);
+      addLogWithDelay("Generating compressed JSZip bundle from processed files...", 10500);
+      addLogWithDelay("Wiping temporary session paths and securing sandbox memory...", 13000);
+
+      try {
+        // Read files as Uint8Arrays concurrently
+        const preparedFiles = await Promise.all(
+          files.map(async (file) => {
+            const buffer = await file.arrayBuffer();
+            return {
+              name: file.name,
+              data: new Uint8Array(buffer),
+            };
+          })
+        );
+
+        // Execute local Electron conversion IPC call
+        const zipData = await window.electronAPI.convertFiles({
+          files: preparedFiles,
+          targetExt,
+        });
+
+        // Convert returned Uint8Array to Blob and create download URL
+        const blob = new Blob([zipData as any], { type: "application/zip" });
+        const url = window.URL.createObjectURL(blob);
+        setDownloadUrl(url);
+
+        // Success! Clear timeouts and show final success outputs
+        timeoutsRef.current.forEach(clearTimeout);
+        setTerminalLogs(prev => [
+          ...prev,
+          `[SUCCESS] Native LibreOffice core successfully converted all files to ${targetExt.toUpperCase()}!`,
+          `[SUCCESS] Local session: bloopdocs_engine_${sId} secured and wiped.`,
+          "Ready for download compilation."
+        ]);
+
+        setState("success");
+      } catch (ipcErr: any) {
+        console.error("IPC Conversion failed:", ipcErr);
+        timeoutsRef.current.forEach(clearTimeout);
+        
+        const friendlyMsg = ipcErr.message || ipcErr || "LibreOffice not found or compilation exception";
+        setTerminalLogs(prev => [
+          ...prev,
+          `[ERROR] Local Desktop Engine failed.`,
+          `[ERROR] Details: ${friendlyMsg}.`,
+          `[ERROR] Wiping conversion session block: COMPLETE.`
+        ]);
+
+        setState("selected");
+        showToast(friendlyMsg.includes("LibreOffice") ? friendlyMsg : "Desktop conversion failed. Ensure LibreOffice is installed.", "error");
+      }
+      return;
+    }
+
+    // Standard Web Fallback via POST Request
     addLogWithDelay("Spawning headless LibreOffice compiler instance...", 1200);
     addLogWithDelay("Allocating private session memory block for thread isolation...", 2800);
     addLogWithDelay(`Mounting source documents and preparing translation queue...`, 4500);
