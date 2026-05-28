@@ -8,22 +8,22 @@ interface FormatNode {
   name: string;
   desc: string;
   brand: string;
-  color: string;
   speed: string;
   fidelity: string;
+  nativeColor: string; // The native brand color used in falling files / apps
 }
 
 const SUPPORTED_NODES: FormatNode[] = [
-  { ext: "PDF", name: "Adobe PDF", desc: "Universal layout locking, absolute vector rendering, and embedded fonts.", brand: "Universal", color: "from-red-600 to-rose-500", speed: "8ms", fidelity: "100%" },
-  { ext: "DOCX", name: "Microsoft Word", desc: "Complex columns, absolute margin margins, headers, footers, and shape layers.", brand: "Word", color: "from-blue-600 to-cyan-500", speed: "14ms", fidelity: "99.8%" },
-  { ext: "PAGES", name: "Apple Pages", desc: "Rich typography, nested column layouts, custom media frames, and canvas grids.", brand: "iWork", color: "from-orange-500 to-amber-500", speed: "18ms", fidelity: "99.9%" },
-  { ext: "XLSX", name: "Microsoft Excel", desc: "Multi-sheet financial matrices, mathematical formula preservation, and styled cell borders.", brand: "Excel", color: "from-emerald-600 to-teal-500", speed: "22ms", fidelity: "100%" },
-  { ext: "NUMBERS", name: "Apple Numbers", desc: "Canvas layout sheet nodes, independent tables, vector chart data, and formula parsing.", brand: "iWork", color: "from-green-500 to-emerald-500", speed: "16ms", fidelity: "99.8%" },
-  { ext: "PPTX", name: "PowerPoint", desc: "Slide transitions, geometric vector assets, styled text boxes, and coordinate mapping.", brand: "PowerPoint", color: "from-fuchsia-600 to-purple-600", speed: "25ms", fidelity: "99.7%" },
-  { ext: "KEY", name: "Apple Keynote", desc: "Cinematic slide grids, absolute coordinate bounding boxes, and grouped shape transformations.", brand: "iWork", color: "from-violet-600 to-purple-500", speed: "20ms", fidelity: "99.9%" },
-  { ext: "TXT", name: "Plain Text", desc: "Raw string extraction, UTF-8 unicode encoding, and unformatted data dumps.", brand: "Universal", color: "from-slate-600 to-slate-400", speed: "2ms", fidelity: "100%" },
-  { ext: "CSV", name: "Comma Separated", desc: "Delimited spreadsheet grids, database rows, and clean flat table matrix parsing.", brand: "Data", color: "from-yellow-600 to-amber-500", speed: "5ms", fidelity: "100%" },
-  { ext: "RTF", name: "Rich Text Format", desc: "Standard cross-platform styling, absolute font family tags, bold, italics, and paragraph maps.", brand: "Universal", color: "from-rose-500 to-red-500", speed: "10ms", fidelity: "99.5%" },
+  { ext: "PDF", name: "Adobe PDF", desc: "Universal layout locking, absolute vector rendering, and embedded fonts.", brand: "Universal", speed: "8ms", fidelity: "100%", nativeColor: "#FF3B30" },
+  { ext: "DOCX", name: "Microsoft Word", desc: "Complex columns, absolute margins, headers, footers, and shape layers.", brand: "Word", speed: "14ms", fidelity: "99.8%", nativeColor: "#2B579A" },
+  { ext: "PAGES", name: "Apple Pages", desc: "Rich typography, nested column layouts, custom media frames, and canvas grids.", brand: "iWork", speed: "18ms", fidelity: "99.9%", nativeColor: "#F98D29" },
+  { ext: "XLSX", name: "Microsoft Excel", desc: "Multi-sheet financial matrices, mathematical formula preservation, and styled cell borders.", brand: "Excel", speed: "22ms", fidelity: "100%", nativeColor: "#217346" },
+  { ext: "NUMBERS", name: "Apple Numbers", desc: "Canvas layout sheets, independent tables, vector chart data, and formula parsing.", brand: "iWork", speed: "16ms", fidelity: "99.8%", nativeColor: "#34C759" },
+  { ext: "PPTX", name: "PowerPoint", desc: "Slide transitions, geometric vector assets, styled text boxes, and coordinate mapping.", brand: "PowerPoint", speed: "25ms", fidelity: "99.7%", nativeColor: "#D24726" },
+  { ext: "KEY", name: "Apple Keynote", desc: "Cinematic slide grids, absolute coordinate bounding boxes, and grouped shape transformations.", brand: "iWork", speed: "20ms", fidelity: "99.9%", nativeColor: "#007AFF" },
+  { ext: "TXT", name: "Plain Text", desc: "Raw string extraction, UTF-8 unicode encoding, and unformatted data dumps.", brand: "Universal", speed: "2ms", fidelity: "100%", nativeColor: "#64748B" },
+  { ext: "CSV", name: "Comma Separated", desc: "Delimited spreadsheet grids, database rows, and clean flat table matrix parsing.", brand: "Data", speed: "5ms", fidelity: "100%", nativeColor: "#F59E0B" },
+  { ext: "RTF", name: "Rich Text Format", desc: "Standard cross-platform styling, absolute font family tags, bold, italics, and paragraph maps.", brand: "Universal", speed: "10ms", fidelity: "99.5%", nativeColor: "#E91E63" },
 ];
 
 export default function FormatOrbit() {
@@ -62,19 +62,23 @@ export default function FormatOrbit() {
                 key={node.ext}
                 onMouseEnter={() => setHoveredIndex(index)}
                 onMouseLeave={() => setHoveredIndex(null)}
-                className={`flex flex-col items-center justify-center p-5 border-2 border-[#862937] select-none cursor-pointer transition-all duration-200 ${
-                  isHovered 
-                    ? "bg-[#B9A071]/10 translate-x-[-2px] translate-y-[-2px] shadow-[6px_6px_0px_0px_#862937]" 
-                    : "bg-white shadow-[4px_4px_0px_0px_#862937]"
+                className={`flex flex-col items-center justify-center p-5 border-2 select-none cursor-pointer transition-all duration-200 ${
+                  isHovered ? "bg-white translate-x-[-2px] translate-y-[-2px]" : "bg-white"
                 }`}
+                style={{
+                  borderColor: node.nativeColor,
+                  color: node.nativeColor,
+                  boxShadow: isHovered 
+                    ? `6px 6px 0px 0px ${node.nativeColor}` 
+                    : `4px 4px 0px 0px ${node.nativeColor}`
+                }}
               >
                 {/* Document SVG Icon with format name centered */}
                 <div className="relative w-14 h-18 flex items-center justify-center mb-3">
                   <svg 
                     viewBox="0 0 24 24" 
-                    className={`absolute inset-0 w-full h-full stroke-[#862937] stroke-[1.8] fill-[#FAFAFA] transition-colors duration-200 ${
-                      isHovered ? "fill-white" : "fill-[#FAFAFA]"
-                    }`}
+                    className={`absolute inset-0 w-full h-full stroke-[1.8] fill-[#FAFAFA] transition-colors duration-200`}
+                    style={{ stroke: node.nativeColor }}
                     strokeLinecap="round" 
                     strokeLinejoin="round"
                   >
@@ -84,12 +88,18 @@ export default function FormatOrbit() {
                   </svg>
                   
                   {/* Format Label Text inside Document */}
-                  <span className="relative z-10 text-[10px] font-black text-[#862937] uppercase tracking-tighter mt-4 select-none">
+                  <span 
+                    className="relative z-10 text-[10px] font-black uppercase tracking-tighter mt-4 select-none"
+                    style={{ color: node.nativeColor }}
+                  >
                     {node.ext}
                   </span>
                 </div>
                 
-                <span className="text-[8px] text-slate-500 font-extrabold uppercase tracking-widest">
+                <span 
+                  className="text-[8px] font-black uppercase tracking-widest opacity-80"
+                  style={{ color: node.nativeColor }}
+                >
                   {node.brand}
                 </span>
               </div>
@@ -103,12 +113,28 @@ export default function FormatOrbit() {
             (() => {
               const node = SUPPORTED_NODES[hoveredIndex];
               return (
-                <div className="w-full p-6 border-4 border-[#862937] bg-white shadow-[6px_6px_0px_0px_#862937] animate-fade-in flex flex-col md:flex-row items-center justify-between gap-6">
+                <div 
+                  className="w-full p-6 border-4 bg-white animate-fade-in flex flex-col md:flex-row items-center justify-between gap-6"
+                  style={{ 
+                    borderColor: node.nativeColor, 
+                    boxShadow: `6px 6px 0px 0px ${node.nativeColor}`
+                  }}
+                >
                   <div className="space-y-2 text-center md:text-left flex-1">
                     <div className="flex flex-col md:flex-row items-center gap-3">
-                      <h4 className="text-lg font-black text-[#862937] flex items-center gap-2">
+                      <h4 
+                        className="text-lg font-black flex items-center gap-2"
+                        style={{ color: node.nativeColor }}
+                      >
                         {node.name}
-                        <span className="text-[10px] px-2.5 py-0.5 border-2 border-[#862937] bg-[#B9A071] font-black tracking-widest uppercase text-[#862937] shadow-[2px_2px_0px_0px_#862937]">
+                        <span 
+                          className="text-[10px] px-2.5 py-0.5 border-2 font-black tracking-widest uppercase shadow-[2px_2px_0px_0px_currentColor]"
+                          style={{ 
+                            borderColor: node.nativeColor, 
+                            color: node.nativeColor,
+                            backgroundColor: `${node.nativeColor}15`
+                          }}
+                        >
                           {node.ext}
                         </span>
                       </h4>
@@ -119,11 +145,17 @@ export default function FormatOrbit() {
                   </div>
                   
                   {/* Metrics block */}
-                  <div className="flex gap-4 border-t md:border-t-0 md:border-l-2 border-dashed border-[#862937] pt-6 md:pt-0 md:pl-6 w-full md:w-auto shrink-0 justify-around select-none">
+                  <div 
+                    className="flex gap-4 border-t md:border-t-0 md:border-l-2 border-dashed pt-6 md:pt-0 md:pl-6 w-full md:w-auto shrink-0 justify-around select-none"
+                    style={{ borderColor: node.nativeColor }}
+                  >
                     <div className="text-center min-w-[70px]">
                       <div className="text-[8px] text-slate-500 uppercase tracking-widest font-black mb-1.5">Fidelity</div>
-                      <div className="text-sm font-black text-[#862937] flex items-center justify-center gap-1">
-                        <Zap className="w-3.5 h-3.5 fill-[#862937] stroke-none" />
+                      <div 
+                        className="text-sm font-black flex items-center justify-center gap-1"
+                        style={{ color: node.nativeColor }}
+                      >
+                        <Zap className="w-3.5 h-3.5 fill-current stroke-none" />
                         {node.fidelity}
                       </div>
                     </div>
@@ -131,7 +163,7 @@ export default function FormatOrbit() {
                     <div className="text-center min-w-[70px]">
                       <div className="text-[8px] text-slate-500 uppercase tracking-widest font-black mb-1.5">Latency</div>
                       <div className="text-sm font-black text-slate-800 flex items-center justify-center gap-1">
-                        <Eye className="w-3.5 h-3.5" />
+                        <Eye className="w-3.5 h-3.5" style={{ color: node.nativeColor }} />
                         {node.speed}
                       </div>
                     </div>
