@@ -3,7 +3,12 @@
 import React from "react";
 import Link from "next/link";
 
-export default function Navbar() {
+interface NavbarProps {
+  onOpenSupportedFiles?: () => void;
+  onOpenDocs?: () => void;
+}
+
+export default function Navbar({ onOpenSupportedFiles, onOpenDocs }: NavbarProps) {
   return (
     <nav className="fixed top-0 left-0 w-full z-50 bg-[#C4B883] border-b-2 border-[#862937]">
       <div className="w-full px-8 h-20 flex items-center justify-between">
@@ -17,12 +22,12 @@ export default function Navbar() {
 
         {/* BRUTALIST TEXT LINKS */}
         <div className="hidden md:flex items-center gap-6">
-          <Link 
-            href="#orbit-section" 
-            className="text-sm font-black text-[#862937] uppercase tracking-widest px-3 py-2 hover:bg-[#B9A071] transition-brutalist"
+          <button 
+            onClick={onOpenSupportedFiles}
+            className="text-sm font-black text-[#862937] uppercase tracking-widest px-3 py-2 hover:bg-[#B9A071] transition-brutalist cursor-pointer"
           >
             SUPPORTED FILES
-          </Link>
+          </button>
           <a 
             href="https://github.com/7-Bala/BloopDocs" 
             target="_blank"
@@ -34,12 +39,12 @@ export default function Navbar() {
             </svg>
             <span>GITHUB</span>
           </a>
-          <Link 
-            href="#docs-section" 
-            className="text-sm font-black text-[#862937] uppercase tracking-widest px-3 py-2 hover:bg-[#B9A071] transition-brutalist"
+          <button 
+            onClick={onOpenDocs}
+            className="text-sm font-black text-[#862937] uppercase tracking-widest px-3 py-2 hover:bg-[#B9A071] transition-brutalist cursor-pointer"
           >
             DOCS
-          </Link>
+          </button>
         </div>
 
         {/* MOBILE MENU TOGGLE (Pure Text) */}
