@@ -176,6 +176,10 @@ export default function HandwrittenTitle() {
           gsap.set(pen, { x: pt.x, y: pt.y });
           prevMaxXConvert = Math.max(prevMaxXConvert, pt.x);
           updateMaskPolygon(polyConvert, prevMaxXConvert, pt.y);
+        },
+        onComplete: () => {
+          // Fully open the first mask to 1000 to prevent any letter clipping (crossbar, exit stroke)
+          polyConvert.setAttribute("points", "0,0 1000,0 1000,400 0,400");
         }
       });
 
@@ -187,8 +191,7 @@ export default function HandwrittenTitle() {
         duration: 0.6,
         ease: "power2.inOut",
         onUpdate: () => {
-          // Keep the first mask fully open and second mask empty during transit
-          updateMaskPolygon(polyConvert, xEndConv, 150);
+          // Keep second mask empty during transit (first mask remains fully open)
           polyAnything.setAttribute("points", "0,0 0,0 0,400 0,400");
         }
       });
@@ -205,6 +208,10 @@ export default function HandwrittenTitle() {
           gsap.set(pen, { x: pt.x, y: pt.y });
           prevMaxXAnything = Math.max(prevMaxXAnything, pt.x);
           updateMaskPolygon(polyAnything, prevMaxXAnything, pt.y);
+        },
+        onComplete: () => {
+          // Fully open the second mask to 1000 to prevent any letter clipping (period, tails)
+          polyAnything.setAttribute("points", "0,0 1000,0 1000,400 0,400");
         }
       });
     });
