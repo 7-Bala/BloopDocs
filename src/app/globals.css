@@ -125,3 +125,12 @@ input[type="file"] {
 .animate-blink {
   animation: blink 0.8s infinite steps(1);
 }
+
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0) translateX(-50%); }
+  50% { transform: translateY(10px) translateX(-50%); }
+}
+.animate-bounce-slow {
+  animation: bounce-slow 1.8s ease-in-out infinite;
+}
+

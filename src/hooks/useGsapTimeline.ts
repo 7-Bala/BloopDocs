@@ -9,381 +9,9 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-/**
- * Hook for cinematic Hero header text animation.
- * Features a stagger-in fade/translate on mount and dynamic parallax scroll effects.
- */
-export function useHeroAnimation(
-  containerRef: RefObject<HTMLDivElement | null>,
-  titleRef: RefObject<HTMLHeadingElement | null>,
-  subtitleRef: RefObject<HTMLParagraphElement | null>,
-  ctaRef: RefObject<HTMLDivElement | null>,
-  backgroundRef: RefObject<HTMLDivElement | null>
-) {
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    // React 18 clean animation context (guarantees garbage collection on unmount)
-    const ctx = gsap.context(() => {
-      // 1. Initial mounting timeline (fades and moves elements up staggered)
-      const tl = gsap.timeline({
-        defaults: { ease: "power3.out", duration: 1.2 },
-      });
-
-      tl.fromTo(
-        titleRef.current,
-        { opacity: 0, y: 50, scale: 0.95 },
-        { opacity: 1, y: 0, scale: 1, delay: 0.2 }
-      )
-        .fromTo(
-          subtitleRef.current,
-          { opacity: 0, y: 30 },
-          { opacity: 1, y: 0 },
-          "-=0.9" // overlap by 0.9s
-        )
-        .fromTo(
-          ctaRef.current,
-          { opacity: 0, y: 20 },
-          { opacity: 1, y: 0 },
-          "-=0.8"
-        );
-
-      // 2. Parallax effect on the background shapes as the user scrolls
-      if (backgroundRef.current) {
-        gsap.to(backgroundRef.current.children, {
-          y: (i) => {
-            const speed = (i + 1) * 80;
-            return speed;
-          },
-          ease: "none",
-          scrollTrigger: {
-            trigger: containerRef.current,
-            start: "top top",
-            end: "bottom top",
-            scrub: true,
-          },
-        });
-      }
-    }, containerRef);
-
-    // Cleanup: Revert all animations and kill ScrollTriggers to prevent memory leaks
-    return () => ctx.revert();
-  }, [containerRef, titleRef, subtitleRef, ctaRef, backgroundRef]);
-}
-
-/**
- * Hook to "parachute" and pin the main converter section.
- * Smoothly translates and scales the container into place on scroll.
- */
-export function useConverterParachute(
-  containerRef: RefObject<HTMLDivElement | null>,
-  cardRef: RefObject<HTMLDivElement | null>
-) {
-  useEffect(() => {
-    if (!containerRef.current || !cardRef.current) return;
-
-    const ctx = gsap.context(() => {
-      // Animate the card into view as the user scrolls down into the section
-      gsap.fromTo(
-        cardRef.current,
-        {
-          opacity: 0,
-          y: 120,
-          scale: 0.9,
-          rotationX: 12, // Cinematic perspective tilt
-        },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          rotationX: 0,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: containerRef.current,
-            start: "top 80%", // Starts when the top of the container is 80% down the viewport
-            end: "top 30%",   // Reaches fully animated state at 30% viewport height
-            scrub: 1,         // Smooth delayed catch-up
-          },
-        }
-      );
-    }, containerRef);
-
-    return () => ctx.revert();
-  }, [containerRef, cardRef]);
-}
-
-/**
- * Hook to drive a continuous wobbly liquid SVG shape and filter morphing timeline
- * to represent the "Bloop" loading state.
- */
-export function useBloopMorph(
-  svgPathRef: RefObject<SVGPathElement | null>,
-  filterRef: RefObject<SVGFETurbulenceElement | null>,
-  isActive: boolean
-) {
-  useEffect(() => {
-    if (!svgPathRef.current || !isActive) return;
-
-    // Organic path variations (defined with identical vertex counts to morph out-of-the-box)
-    const shapes = [
-      "M25,50 C25,25 50,25 50,25 C50,25 75,25 75,50 C75,75 75,75 50,75 C25,75 25,75 25,50 Z", // Base
-      "M30,50 C25,20 60,30 55,20 C50,10 80,30 70,50 C60,70 80,80 50,80 C20,80 35,80 30,50 Z", // Right stretch
-      "M20,45 C20,30 40,15 50,25 C60,35 85,25 80,45 C75,65 70,85 52,75 C34,65 20,60 20,45 Z", // Left stretch
-      "M25,50 C25,25 50,25 50,25 C50,25 75,25 75,50 C75,75 75,75 50,75 C25,75 25,75 25,50 Z"  // Re-base
-    ];
-
-    const ctx = gsap.context(() => {
-      // Loop the morph timeline infinitely
-      const tl = gsap.timeline({ repeat: -1 });
-
-      tl.to(svgPathRef.current, {
-        attr: { d: shapes[1] },
-        duration: 1.5,
-        ease: "sine.inOut",
-      })
-        .to(svgPathRef.current, {
-          attr: { d: shapes[2] },
-          duration: 1.5,
-          ease: "sine.inOut",
-        })
-        .to(svgPathRef.current, {
-          attr: { d: shapes[3] },
-          duration: 1.5,
-          ease: "sine.inOut",
-        });
-
-      // Liquid wobbly rotation
-      gsap.to(svgPathRef.current, {
-        rotate: 360,
-        transformOrigin: "center center",
-        duration: 10,
-        repeat: -1,
-        ease: "none",
-      });
-
-      // Dynamic liquid feTurbulence morphing
-      if (filterRef.current) {
-        gsap.to(filterRef.current, {
-          attr: { baseFrequency: "0.015 0.08" },
-          duration: 1.8,
-          repeat: -1,
-          yoyo: true,
-          ease: "sine.inOut",
-        });
-      }
-    });
-
-    return () => ctx.revert();
-  }, [svgPathRef, filterRef, isActive]);
-}
-
-/**
- * Hook to drive a synchronized circular orbit where the outer container rotates
- * and the inner items counter-rotate to stay upright. Pauses on hover.
- */
-export function useOrbitSync(
-  containerRef: RefObject<HTMLDivElement | null>,
-  orbitRef: RefObject<HTMLDivElement | null>,
-  nodesRef: RefObject<(HTMLDivElement | null)[]>
-) {
-  useEffect(() => {
-    const triggerArea = containerRef.current;
-    if (!triggerArea || !orbitRef.current || !nodesRef.current) return;
-
-    const ctx = gsap.context(() => {
-      const tlOuter = gsap.to(orbitRef.current, {
-        rotation: 360,
-        duration: 40,
-        repeat: -1,
-        ease: "none",
-      });
-
-      const nodes = nodesRef.current.filter((node) => node !== null) as HTMLDivElement[];
-      const tlInner = gsap.to(nodes, {
-        rotation: -360,
-        duration: 40,
-        repeat: -1,
-        ease: "none",
-      });
-
-      // Pause on hover handlers
-      const handleMouseEnter = () => {
-        tlOuter.pause();
-        tlInner.pause();
-      };
-
-      const handleMouseLeave = () => {
-        tlOuter.play();
-        tlInner.play();
-      };
-
-      triggerArea.addEventListener("mouseenter", handleMouseEnter);
-      triggerArea.addEventListener("mouseleave", handleMouseLeave);
-
-      return () => {
-        triggerArea.removeEventListener("mouseenter", handleMouseEnter);
-        triggerArea.removeEventListener("mouseleave", handleMouseLeave);
-      };
-    }, containerRef);
-
-    return () => ctx.revert();
-  }, [containerRef, orbitRef, nodesRef]);
-}
-
-/**
- * Hook to stagger-fade dashboard components on scroll.
- */
-export function useDashboardStagger(
-  containerRef: RefObject<HTMLDivElement | null>,
-  cardsRef: RefObject<(HTMLDivElement | null)[]>
-) {
-  useEffect(() => {
-    if (!containerRef.current || !cardsRef.current) return;
-
-    const ctx = gsap.context(() => {
-      const cards = cardsRef.current.filter((card) => card !== null) as HTMLDivElement[];
-      if (cards.length === 0) return;
-
-      gsap.fromTo(
-        cards,
-        {
-          opacity: 0,
-          y: 40,
-          scale: 0.97,
-        },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.8,
-          stagger: 0.12,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: containerRef.current,
-            start: "top 85%", // Animation starts when top is 85% down viewport
-            toggleActions: "play none none none",
-          },
-        }
-      );
-    }, containerRef);
-
-    return () => ctx.revert();
-  }, [containerRef, cardsRef]);
-}
-
-/**
- * Hook for dynamic multi-layered document parallax around the hero header.
- * Staggers in on mount and shifts card items based on mouse moves.
- */
-export function useHeroParallax(
-  containerRef: RefObject<HTMLDivElement | null>,
-  cardsRef: RefObject<(HTMLDivElement | null)[]>,
-  converterRef: RefObject<HTMLDivElement | null>
-) {
-  useEffect(() => {
-    if (!containerRef.current || !cardsRef.current) return;
-
-    const ctx = gsap.context(() => {
-      const wrappers = cardsRef.current.filter((card) => card !== null) as HTMLDivElement[];
-      if (wrappers.length === 0) return;
-
-      // 1. Initial State: Force wrappers to be fully transparent on mount (appear strictly on scroll!)
-      gsap.set(wrappers, { opacity: 0, scale: 0.4, y: 80 });
-
-      // 2. Coordinated ScrollTrigger timeline for document cards
-      const tlDocs = gsap.timeline({
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top top",
-          end: "bottom 10%",
-          scrub: 1.2, // Silky smooth scroll scrubbing
-        }
-      });
-
-      // Scroll Phase 1: Documents parachute, scale up, and fade in staggered
-      tlDocs.to(wrappers, {
-        opacity: 1,
-        scale: 1,
-        y: 0,
-        stagger: 0.08,
-        duration: 1.5,
-        ease: "power2.out"
-      });
-
-      // Scroll Phase 2: Documents disperse outwards and fade away
-      tlDocs.to(wrappers, {
-        y: (i) => (i % 2 === 0 ? -180 : 180),
-        x: (i) => (i < 3 ? -120 : 120),
-        opacity: 0,
-        duration: 1.8,
-        ease: "power2.inOut",
-        delay: 0.3 // brief pause in visual float
-      });
-
-      // 3. ScrollTrigger for the Converter Section sliding entry
-      if (converterRef.current) {
-        gsap.fromTo(
-          converterRef.current,
-          { 
-            opacity: 0, 
-            y: 150, 
-            scale: 0.95,
-            rotationX: 8, // slight 3D perspective entry angle
-          },
-          {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            rotationX: 0,
-            ease: "power2.out",
-            scrollTrigger: {
-              trigger: converterRef.current,
-              start: "top 90%", // slide starts as top reaches 90% viewport
-              end: "top 40%",   // full locked alignment by 40%
-              scrub: 1.5,
-            }
-          }
-        );
-      }
-
-      // 4. Mouse Move Parallax Logic on the inner cards
-      const innerCards = wrappers
-        .map((w) => w.querySelector(".parallax-inner"))
-        .filter((el) => el !== null) as HTMLDivElement[];
-
-      const handleMouseMove = (e: MouseEvent) => {
-        const mouseX = (e.clientX - window.innerWidth / 2) / (window.innerWidth / 2);
-        const mouseY = (e.clientY - window.innerHeight / 2) / (window.innerHeight / 2);
-
-        innerCards.forEach((card) => {
-          const speedX = parseFloat(card.getAttribute("data-speed-x") || "0") * 35;
-          const speedY = parseFloat(card.getAttribute("data-speed-y") || "0") * 35;
-
-          gsap.to(card, {
-            x: mouseX * speedX,
-            y: mouseY * speedY,
-            duration: 0.8,
-            ease: "power2.out",
-            overwrite: "auto",
-          });
-        });
-      };
-
-      window.addEventListener("mousemove", handleMouseMove);
-
-      return () => {
-        window.removeEventListener("mousemove", handleMouseMove);
-      };
-    }, containerRef);
-
-    return () => ctx.revert();
-  }, [containerRef, cardsRef, converterRef]);
-}
-
-/**
- * Hook for brutalist terminal typewriter styling on hero header.
- * Staggers characters from hidden to block, then fades out the blinking cursor.
- */
+// ─────────────────────────────────────────────────────────────────────────────
+// TYPEWRITER HOOK – Real typewriter feel: slow, variable cadence, blink cursor
+// ─────────────────────────────────────────────────────────────────────────────
 export function useTypewriter(
   containerRef: RefObject<HTMLHeadingElement | null>,
   cursorRef: RefObject<HTMLSpanElement | null>
@@ -392,35 +20,49 @@ export function useTypewriter(
     if (!containerRef.current) return;
 
     const ctx = gsap.context(() => {
-      const letters = containerRef.current!.querySelectorAll(".typewriter-letter");
+      const letters = Array.from(
+        containerRef.current!.querySelectorAll(".typewriter-letter")
+      ) as HTMLElement[];
       if (letters.length === 0) return;
 
-      const tl = gsap.timeline();
-
-      // Typing stagger - 0.05s between each letter
-      tl.fromTo(
-        letters,
-        { display: "none" },
-        {
-          display: "inline-block",
-          stagger: 0.05,
-          ease: "none",
-          duration: 0.01,
-        }
-      );
-
-      // Fade out block cursor smoothly after typing completes
+      // Start: all letters hidden, cursor visible & blinking
+      gsap.set(letters, { display: "none" });
       if (cursorRef.current) {
-        tl.to(cursorRef.current, {
-          opacity: 0,
-          duration: 0.5,
-          delay: 0.4,
-          onComplete: () => {
-            if (cursorRef.current) {
-              cursorRef.current.style.display = "none";
-            }
-          }
-        });
+        gsap.set(cursorRef.current, { opacity: 1, display: "inline-block" });
+      }
+
+      // Build a timeline that reveals each letter with natural human variance
+      const tl = gsap.timeline({ delay: 0.6 });
+
+      let elapsed = 0;
+      letters.forEach((letter, i) => {
+        // Real typewriter cadence: 80–180ms per character,
+        // longer pauses at word boundaries (space or br), occasional "hesitation"
+        const char = letter.textContent || "";
+        const isSpace = char === " ";
+
+        // Variable delay: normal chars 0.09–0.18s, space 0.25s (word pause)
+        const baseDelay = isSpace ? 0.28 : 0.09 + Math.random() * 0.09;
+
+        // Occasional longer "thinking" pause every ~5–8 chars
+        const hesitate = i > 0 && i % (5 + Math.floor(Math.random() * 4)) === 0
+          ? 0.18 + Math.random() * 0.2
+          : 0;
+
+        const delay = elapsed + baseDelay + hesitate;
+        elapsed = delay;
+
+        tl.set(letter, { display: "inline" }, delay);
+      });
+
+      // After typing completes: keep cursor blinking for 1.2s, then fade it
+      const totalDuration = elapsed + 1.2;
+      if (cursorRef.current) {
+        tl.to(
+          cursorRef.current,
+          { opacity: 0, duration: 0.4, ease: "power1.inOut" },
+          totalDuration
+        ).set(cursorRef.current, { display: "none" }, totalDuration + 0.5);
       }
     }, containerRef);
 
@@ -428,3 +70,331 @@ export function useTypewriter(
   }, [containerRef, cursorRef]);
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// DOCUMENT DROP + DUST HOOK
+// Triggered by scroll. Documents fall from above, bounce with dust, then fade.
+// ─────────────────────────────────────────────────────────────────────────────
+export function useDocumentDrop(
+  sectionRef: RefObject<HTMLDivElement | null>,
+  docRefs: RefObject<(HTMLDivElement | null)[]>,
+  dustContainerRef: RefObject<HTMLDivElement | null>
+) {
+  useEffect(() => {
+    if (!sectionRef.current || !docRefs.current) return;
+
+    const ctx = gsap.context(() => {
+      const docs = docRefs.current.filter(Boolean) as HTMLDivElement[];
+      if (docs.length === 0) return;
+
+      // Place docs off-screen above
+      gsap.set(docs, {
+        y: "-120vh",
+        x: 0,
+        opacity: 1,
+        rotation: 0,
+        scale: 1,
+      });
+
+      // Master timeline, controlled by ScrollTrigger scrub
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top top",
+          end: "+=280%",   // pin for 2.8x screen heights of scroll
+          pin: true,
+          scrub: 1.5,
+          anticipatePin: 1,
+        },
+      });
+
+      // --- PHASE 1: Documents fall one by one and bounce ---
+      docs.forEach((doc, i) => {
+        const staggerOffset = i * 0.18;
+        const floorY = 0; // settled at natural position
+
+        // Fall from above with rotation
+        tl.to(
+          doc,
+          {
+            y: floorY + 18, // overshoot floor
+            rotation: (i % 2 === 0 ? 1 : -1) * (3 + i * 1.5),
+            duration: 0.6,
+            ease: "power2.in",
+          },
+          staggerOffset
+        );
+
+        // Bounce 1 (primary bounce – like hitting ground hard)
+        tl.to(
+          doc,
+          {
+            y: floorY - 60 - i * 8,
+            rotation: (i % 2 === 0 ? -1 : 1) * (2 + i),
+            duration: 0.2,
+            ease: "power2.out",
+          },
+          staggerOffset + 0.6
+        );
+
+        // Bounce 2 (smaller)
+        tl.to(
+          doc,
+          {
+            y: floorY + 6,
+            rotation: (i % 2 === 0 ? 0.5 : -0.5) * (i + 1),
+            duration: 0.18,
+            ease: "power2.in",
+          },
+          staggerOffset + 0.8
+        );
+
+        // Settle
+        tl.to(
+          doc,
+          {
+            y: floorY - 12 - i * 4,
+            x: (i % 2 === 0 ? 1 : -1) * (i * 6),
+            rotation: (i % 2 === 0 ? 1 : -1) * (i * 2),
+            duration: 0.14,
+            ease: "power1.out",
+          },
+          staggerOffset + 0.98
+        );
+
+        // Spawn dust at impact moment
+        spawnDust(dustContainerRef, doc, staggerOffset + 0.6, tl);
+      });
+
+      // --- PHASE 2: Float / hover for a moment ---
+      const floatStart = docs.length * 0.18 + 1.2;
+      tl.to(
+        docs,
+        {
+          y: "-=15",
+          duration: 0.5,
+          ease: "sine.inOut",
+        },
+        floatStart
+      );
+
+      // --- PHASE 3: Scatter and fly away upward ---
+      const scatterStart = floatStart + 0.7;
+      docs.forEach((doc, i) => {
+        tl.to(
+          doc,
+          {
+            y: "-130vh",
+            x: (i % 2 === 0 ? -1 : 1) * (60 + i * 40),
+            rotation: (i % 2 === 0 ? -1 : 1) * (20 + i * 12),
+            opacity: 0,
+            duration: 0.8,
+            ease: "power2.in",
+          },
+          scatterStart + i * 0.05
+        );
+      });
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, [sectionRef, docRefs, dustContainerRef]);
+}
+
+// Helper: spawn dust particles at impact point
+function spawnDust(
+  dustContainerRef: RefObject<HTMLDivElement | null>,
+  doc: HTMLDivElement,
+  atTime: number,
+  tl: gsap.core.Timeline
+) {
+  const container = dustContainerRef.current;
+  if (!container) return;
+
+  const PARTICLE_COUNT = 12;
+
+  // We use a callback at the right timeline position
+  tl.call(
+    () => {
+      const rect = doc.getBoundingClientRect();
+      const sectionRect = container.parentElement?.getBoundingClientRect();
+      if (!sectionRect) return;
+
+      const cx = rect.left - sectionRect.left + rect.width / 2;
+      const cy = rect.bottom - sectionRect.top;
+
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        const particle = document.createElement("div");
+        const size = 3 + Math.random() * 6;
+        const angle = (Math.PI * 2 * i) / PARTICLE_COUNT + (Math.random() - 0.5) * 0.8;
+        const speed = 40 + Math.random() * 80;
+
+        particle.style.cssText = `
+          position: absolute;
+          left: ${cx}px;
+          top: ${cy}px;
+          width: ${size}px;
+          height: ${size}px;
+          background-color: rgba(134, 41, 55, ${0.3 + Math.random() * 0.5});
+          border-radius: 0;
+          pointer-events: none;
+          z-index: 50;
+        `;
+        container.appendChild(particle);
+
+        gsap.fromTo(
+          particle,
+          { x: 0, y: 0, opacity: 0.8, scale: 1 },
+          {
+            x: Math.cos(angle) * speed,
+            y: Math.sin(angle) * speed - 30 * Math.random(),
+            opacity: 0,
+            scale: 0.2,
+            duration: 0.6 + Math.random() * 0.4,
+            ease: "power2.out",
+            onComplete: () => {
+              if (particle.parentNode) {
+                particle.parentNode.removeChild(particle);
+              }
+            },
+          }
+        );
+      }
+    },
+    [],
+    atTime
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONVERTER SLIDE-IN HOOK
+// ─────────────────────────────────────────────────────────────────────────────
+export function useConverterReveal(
+  converterRef: RefObject<HTMLDivElement | null>
+) {
+  useEffect(() => {
+    if (!converterRef.current) return;
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        converterRef.current,
+        { opacity: 0, y: 120, scale: 0.95 },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: converterRef.current,
+            start: "top 88%",
+            end: "top 40%",
+            scrub: 1.2,
+          },
+        }
+      );
+    }, converterRef);
+
+    return () => ctx.revert();
+  }, [converterRef]);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LEGACY HOOKS (kept for other components that may reference them)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function useHeroAnimation(
+  containerRef: RefObject<HTMLDivElement | null>,
+  titleRef: RefObject<HTMLHeadingElement | null>,
+  subtitleRef: RefObject<HTMLParagraphElement | null>,
+  ctaRef: RefObject<HTMLDivElement | null>,
+  backgroundRef: RefObject<HTMLDivElement | null>
+) {
+  useEffect(() => {
+    // no-op legacy stub
+  }, [containerRef, titleRef, subtitleRef, ctaRef, backgroundRef]);
+}
+
+export function useConverterParachute(
+  containerRef: RefObject<HTMLDivElement | null>,
+  cardRef: RefObject<HTMLDivElement | null>
+) {
+  useEffect(() => {
+    // no-op legacy stub
+  }, [containerRef, cardRef]);
+}
+
+export function useBloopMorph(
+  svgPathRef: RefObject<SVGPathElement | null>,
+  filterRef: RefObject<SVGFETurbulenceElement | null>,
+  isActive: boolean
+) {
+  useEffect(() => {
+    if (!svgPathRef.current || !isActive) return;
+    const ctx = gsap.context(() => {
+      const shapes = [
+        "M25,50 C25,25 50,25 50,25 C50,25 75,25 75,50 C75,75 75,75 50,75 C25,75 25,75 25,50 Z",
+        "M30,50 C25,20 60,30 55,20 C50,10 80,30 70,50 C60,70 80,80 50,80 C20,80 35,80 30,50 Z",
+        "M20,45 C20,30 40,15 50,25 C60,35 85,25 80,45 C75,65 70,85 52,75 C34,65 20,60 20,45 Z",
+        "M25,50 C25,25 50,25 50,25 C50,25 75,25 75,50 C75,75 75,75 50,75 C25,75 25,75 25,50 Z",
+      ];
+      const tl = gsap.timeline({ repeat: -1 });
+      tl.to(svgPathRef.current, { attr: { d: shapes[1] }, duration: 1.5, ease: "sine.inOut" })
+        .to(svgPathRef.current, { attr: { d: shapes[2] }, duration: 1.5, ease: "sine.inOut" })
+        .to(svgPathRef.current, { attr: { d: shapes[3] }, duration: 1.5, ease: "sine.inOut" });
+      gsap.to(svgPathRef.current, { rotate: 360, transformOrigin: "center center", duration: 10, repeat: -1, ease: "none" });
+      if (filterRef.current) {
+        gsap.to(filterRef.current, { attr: { baseFrequency: "0.015 0.08" }, duration: 1.8, repeat: -1, yoyo: true, ease: "sine.inOut" });
+      }
+    });
+    return () => ctx.revert();
+  }, [svgPathRef, filterRef, isActive]);
+}
+
+export function useOrbitSync(
+  containerRef: RefObject<HTMLDivElement | null>,
+  orbitRef: RefObject<HTMLDivElement | null>,
+  nodesRef: RefObject<(HTMLDivElement | null)[]>
+) {
+  useEffect(() => {
+    const triggerArea = containerRef.current;
+    if (!triggerArea || !orbitRef.current || !nodesRef.current) return;
+    const ctx = gsap.context(() => {
+      const tlOuter = gsap.to(orbitRef.current, { rotation: 360, duration: 40, repeat: -1, ease: "none" });
+      const nodes = nodesRef.current.filter((n) => n !== null) as HTMLDivElement[];
+      const tlInner = gsap.to(nodes, { rotation: -360, duration: 40, repeat: -1, ease: "none" });
+      const pause = () => { tlOuter.pause(); tlInner.pause(); };
+      const play = () => { tlOuter.play(); tlInner.play(); };
+      triggerArea.addEventListener("mouseenter", pause);
+      triggerArea.addEventListener("mouseleave", play);
+      return () => { triggerArea.removeEventListener("mouseenter", pause); triggerArea.removeEventListener("mouseleave", play); };
+    }, containerRef);
+    return () => ctx.revert();
+  }, [containerRef, orbitRef, nodesRef]);
+}
+
+export function useDashboardStagger(
+  containerRef: RefObject<HTMLDivElement | null>,
+  cardsRef: RefObject<(HTMLDivElement | null)[]>
+) {
+  useEffect(() => {
+    if (!containerRef.current || !cardsRef.current) return;
+    const ctx = gsap.context(() => {
+      const cards = cardsRef.current.filter((c) => c !== null) as HTMLDivElement[];
+      if (cards.length === 0) return;
+      gsap.fromTo(cards, { opacity: 0, y: 40, scale: 0.97 }, {
+        opacity: 1, y: 0, scale: 1, duration: 0.8, stagger: 0.12, ease: "power2.out",
+        scrollTrigger: { trigger: containerRef.current, start: "top 85%", toggleActions: "play none none none" },
+      });
+    }, containerRef);
+    return () => ctx.revert();
+  }, [containerRef, cardsRef]);
+}
+
+// kept for any page that still uses this signature
+export function useHeroParallax(
+  containerRef: RefObject<HTMLDivElement | null>,
+  cardsRef: RefObject<(HTMLDivElement | null)[]>,
+  converterRef: RefObject<HTMLDivElement | null>
+) {
+  useEffect(() => {
+    // no-op – replaced by useDocumentDrop + useConverterReveal
+  }, [containerRef, cardsRef, converterRef]);
+}
