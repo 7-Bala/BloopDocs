@@ -283,12 +283,12 @@ export function useHeroParallax(
     if (!containerRef.current || !cardsRef.current) return;
 
     const ctx = gsap.context(() => {
-      const cards = cardsRef.current.filter((card) => card !== null) as HTMLDivElement[];
-      if (cards.length === 0) return;
+      const wrappers = cardsRef.current.filter((card) => card !== null) as HTMLDivElement[];
+      if (wrappers.length === 0) return;
 
       // 1. Mount Stagger Animation (parachutes and bounces sheets into position)
       gsap.fromTo(
-        cards,
+        wrappers,
         { 
           opacity: 0, 
           scale: 0.4, 
@@ -307,12 +307,36 @@ export function useHeroParallax(
         }
       );
 
-      // 2. Mouse Move Parallax Logic
+      // 2. ScrollTrigger Dispersion Logic (fade out and push cards apart)
+      gsap.to(wrappers, {
+        y: (i) => {
+          // Odd index elements float up, even index elements float down
+          return i % 2 === 0 ? -160 : 160;
+        },
+        x: (i) => {
+          // Left side cards move further left, right side cards move further right
+          return i < 3 ? -100 : 100;
+        },
+        opacity: 0,
+        ease: "none",
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top top",
+          end: "bottom 30%",
+          scrub: 1.2, // Silky smooth scroll catch-up scrub
+        }
+      });
+
+      // 3. Mouse Move Parallax Logic on the inner cards
+      const innerCards = wrappers
+        .map((w) => w.querySelector(".parallax-inner"))
+        .filter((el) => el !== null) as HTMLDivElement[];
+
       const handleMouseMove = (e: MouseEvent) => {
         const mouseX = (e.clientX - window.innerWidth / 2) / (window.innerWidth / 2);
         const mouseY = (e.clientY - window.innerHeight / 2) / (window.innerHeight / 2);
 
-        cards.forEach((card) => {
+        innerCards.forEach((card) => {
           const speedX = parseFloat(card.getAttribute("data-speed-x") || "0") * 35;
           const speedY = parseFloat(card.getAttribute("data-speed-y") || "0") * 35;
 
