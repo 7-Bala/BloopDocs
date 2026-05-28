@@ -182,7 +182,7 @@ export default function HandwrittenTitle() {
               d={CONVERT_PATH}
               fill="none"
               stroke="white"
-              strokeWidth="56"
+              strokeWidth="180"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -191,7 +191,7 @@ export default function HandwrittenTitle() {
               d={CONVERT_CROSSBAR}
               fill="none"
               stroke="white"
-              strokeWidth="56"
+              strokeWidth="180"
               strokeLinecap="round"
             />
           </mask>
@@ -204,7 +204,7 @@ export default function HandwrittenTitle() {
               d={ANYTHING_PATH}
               fill="none"
               stroke="white"
-              strokeWidth="56"
+              strokeWidth="180"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -213,21 +213,21 @@ export default function HandwrittenTitle() {
               d={ANYTHING_CROSSBAR}
               fill="none"
               stroke="white"
-              strokeWidth="56"
+              strokeWidth="180"
               strokeLinecap="round"
             />
             <circle
               ref={maskDotRef}
               cx={DOT_COORDS.x}
               cy={DOT_COORDS.y}
-              r="28"
+              r="90"
               fill="white"
             />
             <circle
               ref={maskPeriodRef}
               cx={PERIOD_COORDS.x}
               cy={PERIOD_COORDS.y}
-              r="28"
+              r="90"
               fill="white"
             />
           </mask>
