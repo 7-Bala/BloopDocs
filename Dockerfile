@@ -1,5 +1,5 @@
 # Multi-stage build for optimized image size
-FROM node:18-bullseye-slim AS base
+FROM node:20-bullseye-slim AS base
 
 # Install LibreOffice, fonts, and core system utilities
 RUN apt-get update && apt-get install -y \
