@@ -102,36 +102,43 @@ export default function Home() {
          ══════════════════════════════════════════════ */}
       <div
         ref={docDropSectionRef}
-        className="w-full relative bg-[#C4B883] overflow-hidden"
-        style={{ height: "100vh" }}
+        className="w-full relative bg-[#C4B883]"
+        style={{ height: "100vh", overflow: "hidden" }}
         aria-hidden="true"
       >
-        {/* Dust particle container */}
+        {/* Dust particle container — same size as section, clipped */}
         <div
           ref={dustContainerRef}
           className="absolute inset-0 pointer-events-none z-30"
         />
 
-        {/* Label that appears during the effect */}
-        <div className="absolute top-8 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
-          <p className="text-xs md:text-sm font-black uppercase tracking-[0.4em] text-[#862937] opacity-50">
-            Convert any format
+        {/* Label */}
+        <div className="absolute top-10 left-1/2 -translate-x-1/2 z-40 pointer-events-none whitespace-nowrap">
+          <p className="text-xs md:text-sm font-black uppercase tracking-[0.4em] text-[#862937] opacity-40">
+            Drop any format — we handle it
           </p>
         </div>
 
-        {/* Ground line – documents will settle just above this */}
-        <div className="absolute bottom-[28%] left-0 right-0 h-[2px] bg-[#862937] opacity-20 z-20" />
+        {/* Ground shadow line */}
+        <div className="absolute left-8 right-8 z-10" style={{ bottom: "28%" }}>
+          <div className="w-full h-[2px] bg-[#862937] opacity-15" />
+        </div>
 
-        {/* Document cards — laid out in a row across centre */}
-        <div className="absolute inset-0 flex items-end justify-center pb-[28%] gap-4 md:gap-6 z-20 px-4">
-          {FALL_DOCS.map((doc, idx) => (
+        {/* Document cards — spread across the width, positioned at settle height */}
+        {FALL_DOCS.map((doc, idx) => {
+          // Evenly spread 6 cards across the width (roughly 14% → 86%)
+          const leftPercent = 8 + idx * 14;
+          return (
             <div
               key={idx}
-              ref={(el) => {
-                docRefs.current[idx] = el;
+              ref={(el) => { docRefs.current[idx] = el; }}
+              className="absolute z-20"
+              style={{
+                width: 112,
+                height: 144,
+                left: `calc(${leftPercent}% - 56px)`,
+                bottom: "28%",       // settled position — GSAP animates y from -400 to 0
               }}
-              className="flex-shrink-0 relative"
-              style={{ width: 112, height: 144 }}
             >
               <FloatingDocCard
                 ext={doc.ext}
@@ -139,8 +146,8 @@ export default function Home() {
                 brandColor={doc.brandColor}
               />
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
 
       {/* ══════════════════════════════════════════════
