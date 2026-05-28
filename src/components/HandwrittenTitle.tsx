@@ -3,68 +3,46 @@
 import React, { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 
-// Centerline paths that trace the text boundaries for the masking reveal
-const CONVERT_PATH = "M 320 110 C 270 90, 280 190, 320 180 C 350 140, 370 180, 390 170 C 410 150, 430 180, 440 180 C 460 150, 480 180, 490 180 C 510 150, 530 180, 540 180 C 560 150, 580 180, 590 180 C 610 140, 630 110, 640 110 C 640 130, 640 180, 660 180";
-const CONVERT_CROSSBAR = "M 610 135 L 670 135";
-
-const ANYTHING_PATH = "M 230 290 C 230 260, 255 210, 255 210 C 255 210, 280 260, 280 270 C 280 250, 260 240, 260 240 C 260 240, 280 245, 295 250 C 310 250, 320 290, 330 290 C 350 250, 370 290, 380 290 C 380 290, 370 340, 360 340 C 350 340, 370 300, 390 280 C 410 250, 410 220, 410 220 C 410 240, 410 290, 430 290 C 440 260, 450 220, 450 220 C 450 240, 450 290, 470 290 C 485 260, 495 290, 500 290 C 520 260, 530 290, 540 290 C 560 260, 580 290, 590 290 C 590 290, 580 340, 570 340 C 560 340, 580 300, 600 295 C 620 290, 630 295, 640 295";
-const ANYTHING_CROSSBAR = "M 400 235 L 430 235";
-
-// Hotspot coordinates for dots & quick marks
-const DOT_COORDS = { x: 485, y: 230 };
-const PERIOD_COORDS = { x: 640, y: 295 };
+// Elegant centerline sweep paths that perfectly span the text layout boundaries
+const CONVERT_PATH = "M 260 150 Q 380 115, 500 150 T 740 150";
+const ANYTHING_PATH = "M 180 280 Q 340 240, 500 280 T 820 280";
 
 export default function HandwrittenTitle() {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const penRef = useRef<SVGGElement | null>(null);
 
-  // Mask paths
+  // Mask path elements
   const maskPathConvertRef = useRef<SVGPathElement | null>(null);
-  const maskPathConvertCrossRef = useRef<SVGPathElement | null>(null);
   const maskPathAnythingRef = useRef<SVGPathElement | null>(null);
-  const maskPathAnythingCrossRef = useRef<SVGPathElement | null>(null);
-
-  // Mask static dots
-  const maskDotRef = useRef<SVGCircleElement | null>(null);
-  const maskPeriodRef = useRef<SVGCircleElement | null>(null);
 
   useEffect(() => {
     const pen = penRef.current;
-    
-    // Get all path elements
     const pathConvert = maskPathConvertRef.current;
-    const pathConvertCross = maskPathConvertCrossRef.current;
     const pathAnything = maskPathAnythingRef.current;
-    const pathAnythingCross = maskPathAnythingCrossRef.current;
-    const circleDot = maskDotRef.current;
-    const circlePeriod = maskPeriodRef.current;
 
-    if (!pen || !pathConvert || !pathConvertCross || !pathAnything || !pathAnythingCross || !circleDot || !circlePeriod) {
+    if (!pen || !pathConvert || !pathAnything) {
       return;
     }
 
-    // Measure total path lengths dynamically
+    // Measure path lengths dynamically
     const lenConvert = pathConvert.getTotalLength();
-    const lenConvertCross = pathConvertCross.getTotalLength();
     const lenAnything = pathAnything.getTotalLength();
-    const lenAnythingCross = pathAnythingCross.getTotalLength();
 
-    // Initialize all mask paths as hidden (strokeDashoffset = length)
+    // Initialize stroke states (fully hidden)
     gsap.set(pathConvert, { strokeDasharray: lenConvert, strokeDashoffset: lenConvert });
-    gsap.set(pathConvertCross, { strokeDasharray: lenConvertCross, strokeDashoffset: lenConvertCross });
     gsap.set(pathAnything, { strokeDasharray: lenAnything, strokeDashoffset: lenAnything });
-    gsap.set(pathAnythingCross, { strokeDasharray: lenAnythingCross, strokeDashoffset: lenAnythingCross });
-    gsap.set([circleDot, circlePeriod], { opacity: 0 });
     gsap.set(pen, { display: "none" });
 
-    // Build the master handwriting timeline
+    // Master Calligraphy Timeline
     const tl = gsap.timeline({
       delay: 0.6,
       onStart: () => {
-        gsap.set(pen, { display: "block" });
+        // Position pen at the very start of Convert and show it
+        const startPt = pathConvert.getPointAtLength(0);
+        gsap.set(pen, { x: startPt.x, y: startPt.y, display: "block", opacity: 1 });
       },
       onComplete: () => {
-        // Fade the pen away elegantly once writing is finished
+        // Fade the pen away elegantly once writing finishes
         gsap.to(pen, {
           opacity: 0,
           duration: 0.4,
@@ -76,8 +54,8 @@ export default function HandwrittenTitle() {
       }
     });
 
-    // Helper to animate a path and sync the pen tip position to it
-    const animateStroke = (
+    // Helper to animate mask path reveal & keep the pen tip in pixel-perfect sync
+    const animateSweep = (
       path: SVGPathElement,
       length: number,
       duration: number,
@@ -96,69 +74,20 @@ export default function HandwrittenTitle() {
       };
     };
 
-    // 1. Write the main "Convert" cursive body
-    tl.to(pathConvert, animateStroke(pathConvert, lenConvert, 1.8, "power1.inOut"));
+    // 1. Write "Convert" in one smooth, continuous calligraphic sweep
+    tl.to(pathConvert, animateSweep(pathConvert, lenConvert, 2.2, "power1.inOut"));
 
-    // 2. Lift pen, move to crossbar, and draw "Convert" 't' crossbar
+    // 2. Lift pen and glide smoothly to the start of "Anything."
+    const startAnythingPt = pathAnything.getPointAtLength(0);
     tl.to(pen, {
-      x: 610,
-      y: 135,
-      duration: 0.25,
+      x: startAnythingPt.x,
+      y: startAnythingPt.y,
+      duration: 0.6,
       ease: "power2.inOut",
     });
-    tl.to(pathConvertCross, animateStroke(pathConvertCross, lenConvertCross, 0.35, "sine.inOut"));
 
-    // 3. Lift pen, move to start of "Anything" cursive body
-    tl.to(pen, {
-      x: 230,
-      y: 290,
-      duration: 0.35,
-      ease: "power2.inOut",
-    });
-    
-    // 4. Write "Anything" cursive body
-    tl.to(pathAnything, animateStroke(pathAnything, lenAnything, 2.4, "power1.inOut"));
-
-    // 5. Lift pen, move to second 't' crossbar, and draw it
-    tl.to(pen, {
-      x: 400,
-      y: 235,
-      duration: 0.25,
-      ease: "power2.inOut",
-    });
-    tl.to(pathAnythingCross, animateStroke(pathAnythingCross, lenAnythingCross, 0.35, "sine.inOut"));
-
-    // 6. Lift pen, move to dot the 'i'
-    tl.to(pen, {
-      x: DOT_COORDS.x,
-      y: DOT_COORDS.y,
-      duration: 0.2,
-      ease: "power2.inOut",
-    });
-    tl.to(circleDot, {
-      opacity: 1,
-      duration: 0.1,
-      onStart: () => {
-        // Quick visual tap/press down
-        gsap.fromTo(pen, { scale: 1 }, { scale: 0.85, duration: 0.05, yoyo: true, repeat: 1 });
-      }
-    });
-
-    // 7. Lift pen, move to dot the period '.'
-    tl.to(pen, {
-      x: PERIOD_COORDS.x,
-      y: PERIOD_COORDS.y,
-      duration: 0.25,
-      ease: "power2.inOut",
-    });
-    tl.to(circlePeriod, {
-      opacity: 1,
-      duration: 0.1,
-      onStart: () => {
-        // Quick visual tap/press down
-        gsap.fromTo(pen, { scale: 1 }, { scale: 0.85, duration: 0.05, yoyo: true, repeat: 1 });
-      }
-    });
+    // 3. Write "Anything." in one smooth, continuous calligraphic sweep
+    tl.to(pathAnything, animateSweep(pathAnything, lenAnything, 2.8, "power1.inOut"));
 
     return () => {
       tl.kill();
@@ -182,17 +111,9 @@ export default function HandwrittenTitle() {
               d={CONVERT_PATH}
               fill="none"
               stroke="white"
-              strokeWidth="180"
+              strokeWidth="200"
               strokeLinecap="round"
               strokeLinejoin="round"
-            />
-            <path
-              ref={maskPathConvertCrossRef}
-              d={CONVERT_CROSSBAR}
-              fill="none"
-              stroke="white"
-              strokeWidth="180"
-              strokeLinecap="round"
             />
           </mask>
 
@@ -204,31 +125,9 @@ export default function HandwrittenTitle() {
               d={ANYTHING_PATH}
               fill="none"
               stroke="white"
-              strokeWidth="180"
+              strokeWidth="200"
               strokeLinecap="round"
               strokeLinejoin="round"
-            />
-            <path
-              ref={maskPathAnythingCrossRef}
-              d={ANYTHING_CROSSBAR}
-              fill="none"
-              stroke="white"
-              strokeWidth="180"
-              strokeLinecap="round"
-            />
-            <circle
-              ref={maskDotRef}
-              cx={DOT_COORDS.x}
-              cy={DOT_COORDS.y}
-              r="90"
-              fill="white"
-            />
-            <circle
-              ref={maskPeriodRef}
-              cx={PERIOD_COORDS.x}
-              cy={PERIOD_COORDS.y}
-              r="90"
-              fill="white"
             />
           </mask>
         </defs>
@@ -262,30 +161,46 @@ export default function HandwrittenTitle() {
           Anything.
         </text>
 
-        {/* Elegant fountain pen slanted at 45 degrees */}
+        {/* Slanted Golden & Crimson Calligraphic Fountain Pen */}
         <g
           ref={penRef}
           style={{ display: "none", transformOrigin: "0px 0px" }}
         >
-          {/* Slanted fountain pen tip aligning precisely at the (0,0) hot-spot */}
-          <path
-            d="M 0 0 L 8 -8 L 14 -4 Z"
-            fill="#862937"
-          />
-          <path
-            d="M 8 -8 L 56 -56 L 68 -44 L 20 4 Z"
-            fill="#903635"
-            stroke="#862937"
-            strokeWidth="3"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M 50 -50 L 62 -62 L 68 -56 L 56 -44 Z"
-            fill="#C4B883"
-            stroke="#862937"
-            strokeWidth="1.5"
-          />
-          <circle cx="14" cy="-10" r="2.5" fill="#C4B883" />
+          {/* Tilted pen group slanted at a natural writing angle (-35 degrees) */}
+          <g transform="rotate(-35)">
+            {/* Pen Barrel (sleek dark crimson body) */}
+            <path
+              d="M -8 -26 L -6 -140 L 6 -140 L 8 -26 Z"
+              fill="#903635"
+              stroke="#862937"
+              strokeWidth="2"
+              strokeLinejoin="round"
+            />
+            {/* Gold accents / band */}
+            <rect x="-8.5" y="-32" width="17" height="6" fill="#B9A071" stroke="#862937" strokeWidth="1" />
+            <rect x="-6.5" y="-132" width="13" height="6" fill="#B9A071" stroke="#862937" strokeWidth="1" />
+            
+            {/* Pen Collar (black/burgundy grip section) */}
+            <path
+              d="M -8 -20 L -6 -26 L 6 -26 L 8 -20 Z"
+              fill="#5a1823"
+              stroke="#862937"
+              strokeWidth="1.5"
+            />
+            
+            {/* Golden Nib */}
+            <path
+              d="M 0 0 L -3 -8 L -6 -20 L 6 -20 L 3 -8 Z"
+              fill="#C4B883"
+              stroke="#862937"
+              strokeWidth="1.5"
+              strokeLinejoin="round"
+            />
+            
+            {/* Nib Slit & Breather Hole */}
+            <line x1="0" y1="0" x2="0" y2="-12" stroke="#862937" strokeWidth="1" />
+            <circle cx="0" cy="-12" r="1" fill="#862937" />
+          </g>
         </g>
       </svg>
     </div>
