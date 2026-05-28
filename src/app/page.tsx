@@ -46,9 +46,11 @@ export default function Home() {
           ))}
           <span
             ref={cursorRef}
-            className="inline-block w-[0.12em] h-[0.75em] bg-[#862937] ml-1 align-middle animate-blink"
+            className="inline-block ml-1 align-middle"
             aria-hidden="true"
-          />
+          >
+            <span className="inline-block w-[0.12em] h-[0.75em] bg-[#862937] animate-blink" />
+          </span>
         </h1>
         <p className="mt-6 text-lg md:text-2xl text-[#903635] font-bold tracking-widest uppercase text-center max-w-3xl leading-relaxed select-none">
           Strictly local. Absolutely free.<br />Zero size limits.

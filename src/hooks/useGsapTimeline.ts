@@ -22,11 +22,45 @@ export function useTypewriter(
     const letters = el.querySelectorAll(".tw-char");
     if (letters.length === 0) return;
 
-    const tl = gsap.timeline({ delay: 0.5 });
+    // Set initial state for organic "writing on hand" slide-up effect
+    gsap.set(letters, { opacity: 0, y: 12, visibility: "visible" });
 
-    // Reveal each letter at 0.12s intervals
+    const tl = gsap.timeline({ delay: 0.5 });
+    let currentTime = 0;
+
     letters.forEach((letter, i) => {
-      tl.set(letter, { visibility: "visible" }, i * 0.12);
+      const char = letter.textContent || "";
+      
+      // Calculate custom delay for human-like typing cadence (writing by hand)
+      let delay = 0.06 + Math.random() * 0.08; // base typing speed: 60ms - 140ms
+      
+      const prevLetter = letters[i - 1];
+      const prevChar = prevLetter ? prevLetter.textContent || "" : "";
+      
+      // Pause at the line break boundary between CONVERT (length 7) and ANYTHING. (index 7 onwards)
+      if (i === 7) {
+        delay += 0.6 + Math.random() * 0.4; // 600ms - 1000ms pause for the line break
+      } else if (char === "." || char === "," || char === "!" || char === "?") {
+        delay += 0.4 + Math.random() * 0.3; // 400ms - 700ms pause for punctuation
+      } else if (prevChar === " " || prevChar === "\xa0") {
+        delay += 0.15 + Math.random() * 0.15; // pause between words
+      } else {
+        // Occasional natural pause/hesitation (e.g. 8% chance of a 150-300ms pause)
+        if (Math.random() < 0.08 && i > 0) {
+          delay += 0.15 + Math.random() * 0.2;
+        }
+      }
+
+      currentTime += delay;
+
+      // Organic, smooth fade-in and slide-up for each character
+      tl.to(letter, {
+        opacity: 1,
+        y: 0,
+        duration: 0.18,
+        ease: "power2.out",
+        force3D: true,
+      }, currentTime);
     });
 
     // Fade out cursor after typing finishes
@@ -35,7 +69,7 @@ export function useTypewriter(
         opacity: 0,
         duration: 0.5,
         ease: "power1.inOut",
-      }, letters.length * 0.12 + 1.0);
+      }, currentTime + 1.2);
     }
 
     return () => { tl.kill(); };
@@ -106,6 +140,18 @@ export function useDocumentDrop(
         force3D: true,
       }, scatterStart + i * 0.04);
     });
+
+    // Phase 4 — Collapse height to 0 since the page section is empty
+    const collapseStart = scatterStart + docs.length * 0.04 + 0.6;
+    tl.to(section, {
+      height: 0,
+      duration: 0.8,
+      ease: "power3.inOut",
+      onComplete: () => {
+        section.style.display = "none";
+        ScrollTrigger.refresh();
+      }
+    }, collapseStart);
 
     // Trigger: play once when section enters viewport, never reverse
     const st = ScrollTrigger.create({
