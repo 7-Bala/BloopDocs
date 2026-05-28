@@ -4,111 +4,160 @@ import React, { useRef } from "react";
 import Navbar from "@/components/Navbar";
 import Converter from "@/components/Converter";
 import FloatingDocCard from "@/components/FloatingDocCard";
-import { useHeroParallax, useTypewriter } from "@/hooks/useGsapTimeline";
+import { useTypewriter, useDocumentDrop, useConverterReveal } from "@/hooks/useGsapTimeline";
 
-const FLOATING_DOCS = [
-  { ext: "PDF", name: "report.pdf", brandColor: "#FF0000", speedX: -1.2, speedY: -0.8, style: { left: "1%", top: "10%" } },
-  { ext: "DOCX", name: "resume.docx", brandColor: "#2B579A", speedX: 1.4, speedY: -1.0, style: { right: "1%", top: "8%" } },
-  { ext: "PAGES", name: "novel.pages", brandColor: "#F98D29", speedX: -1.6, speedY: 1.2, style: { left: "0%", bottom: "12%" } },
-  { ext: "XLSX", name: "budget.xlsx", brandColor: "#217346", speedX: 1.2, speedY: 0.9, style: { right: "0%", bottom: "10%" } },
-  { ext: "KEY", name: "pitch.key", brandColor: "#007AFF", speedX: -0.8, speedY: -1.4, style: { left: "4%", top: "44%" } },
-  { ext: "PPTX", name: "deck.pptx", brandColor: "#D24726", speedX: 1.1, speedY: 1.3, style: { right: "4%", bottom: "40%" } },
+// Document definitions for the fall effect
+const FALL_DOCS = [
+  { ext: "PDF",   name: "annual_report.pdf",  brandColor: "#FF3B30" },
+  { ext: "DOCX",  name: "resume_2024.docx",   brandColor: "#2B579A" },
+  { ext: "PAGES", name: "novel_draft.pages",  brandColor: "#F98D29" },
+  { ext: "XLSX",  name: "budget_q4.xlsx",     brandColor: "#217346" },
+  { ext: "PPTX",  name: "pitch_deck.pptx",    brandColor: "#D24726" },
+  { ext: "KEY",   name: "keynote_final.key",  brandColor: "#007AFF" },
 ];
 
 export default function Home() {
+  // --- Typewriter refs ---
+  const titleRef   = useRef<HTMLHeadingElement | null>(null);
+  const cursorRef  = useRef<HTMLSpanElement | null>(null);
+
+  // --- Document drop refs ---
+  const docDropSectionRef  = useRef<HTMLDivElement | null>(null);
+  const docRefs            = useRef<(HTMLDivElement | null)[]>([]);
+  const dustContainerRef   = useRef<HTMLDivElement | null>(null);
+
+  // --- Converter ref ---
   const converterSectionRef = useRef<HTMLDivElement | null>(null);
-  const heroContainerRef = useRef<HTMLDivElement | null>(null);
-  const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
-  const titleRef = useRef<HTMLHeadingElement | null>(null);
-  const cursorRef = useRef<HTMLSpanElement | null>(null);
 
-  // Mount-time typewriter reveal
+  // --- Hook activations ---
   useTypewriter(titleRef, cursorRef);
-
-  // Coordinated scroll-driven document dispersion + converter perspective slide-in
-  useHeroParallax(heroContainerRef, cardsRef, converterSectionRef);
+  useDocumentDrop(docDropSectionRef, docRefs, dustContainerRef);
+  useConverterReveal(converterSectionRef);
 
   const textLine1 = "CONVERT";
   const textLine2 = "ANYTHING.";
 
   return (
-    <main className="flex-grow flex flex-col relative z-10 w-full bg-[#C4B883] overflow-hidden pt-20 min-h-screen">
+    <main className="flex-grow flex flex-col relative z-10 w-full bg-[#C4B883] overflow-x-hidden pt-20">
       <Navbar />
 
-      {/* MASSIVE TYPOGRAPHIC HERO */}
-      <div 
-        ref={heroContainerRef}
-        className="w-full relative z-20 flex flex-col items-center justify-center pt-24 pb-12 px-6 mt-12 border-b-2 border-[#862937] min-h-[420px] md:min-h-[500px] bg-[#C4B883]"
-      >
-        {/* Alignment Wrapper: Locks boundaries to max-w-5xl and prevents offscreen clipping */}
-        <div className="absolute inset-0 w-full max-w-5xl mx-auto pointer-events-none z-10 hidden lg:block">
-          <div className="relative w-full h-full">
-            {/* Floating document themed cards */}
-            {FLOATING_DOCS.map((doc, idx) => (
-              <div
-                key={idx}
-                ref={(el) => {
-                  if (cardsRef.current) {
-                    cardsRef.current[idx] = el;
-                  }
-                }}
-                className="absolute pointer-events-auto"
-                style={doc.style}
-              >
-                <div
-                  className="parallax-inner"
-                  data-speed-x={doc.speedX}
-                  data-speed-y={doc.speedY}
-                >
-                  <FloatingDocCard
-                    ext={doc.ext}
-                    name={doc.name}
-                    brandColor={doc.brandColor}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <h1 
+      {/* ══════════════════════════════════════════════
+          SECTION 1 — TYPEWRITER HERO
+          Full-viewport height, text types in on load
+         ══════════════════════════════════════════════ */}
+      <section className="w-full min-h-[calc(100vh-80px)] flex flex-col items-center justify-center px-6 border-b-2 border-[#862937] bg-[#C4B883] relative z-20">
+        <h1
           ref={titleRef}
-          className="text-[6rem] md:text-[12rem] font-black tracking-normal text-[#862937] mb-8 text-center leading-[0.85] uppercase relative z-30 select-none min-h-[160px] md:min-h-[260px]"
+          className="text-[5.5rem] md:text-[11rem] font-black tracking-normal text-[#862937] mb-6 text-center leading-[0.9] uppercase select-none"
+          aria-label="Convert Anything"
         >
-          {textLine1.split("").map((char, index) => (
-            <span key={`line1-${index}`} className="typewriter-letter" style={{ display: "none" }}>
+          {/* Line 1 */}
+          {textLine1.split("").map((char, i) => (
+            <span
+              key={`l1-${i}`}
+              className="typewriter-letter"
+              style={{ display: "none" }}
+            >
               {char}
             </span>
           ))}
-          <br className="hidden md:block"/>
-          {" "}
-          {textLine2.split("").map((char, index) => (
-            <span key={`line2-${index}`} className="typewriter-letter" style={{ display: "none" }}>
+          <br className="hidden md:block" />
+          {/* small gap between lines */}
+          <span className="typewriter-letter" style={{ display: "none" }}>{" "}</span>
+          {/* Line 2 */}
+          {textLine2.split("").map((char, i) => (
+            <span
+              key={`l2-${i}`}
+              className="typewriter-letter"
+              style={{ display: "none" }}
+            >
               {char}
             </span>
           ))}
-          {/* Blinking block terminal cursor */}
-          <span 
-            ref={cursorRef} 
-            className="inline-block w-[15px] md:w-[30px] h-[65px] md:h-[115px] bg-[#862937] ml-2 align-middle relative top-[-6px] md:top-[-10px] animate-blink"
+          {/* Terminal block cursor */}
+          <span
+            ref={cursorRef}
+            className="inline-block w-[14px] md:w-[26px] h-[64px] md:h-[110px] bg-[#862937] ml-2 align-middle relative top-[-4px] md:top-[-8px] animate-blink"
+            aria-hidden="true"
           />
         </h1>
-        <p className="text-xl md:text-2xl text-[#903635] font-bold tracking-widest uppercase text-center max-w-3xl leading-relaxed mt-4 relative z-30 select-none">
+
+        <p className="text-xl md:text-2xl text-[#903635] font-bold tracking-widest uppercase text-center max-w-3xl leading-relaxed mt-4 select-none">
           Strictly local. Absolutely free. <br /> Zero size limits.
         </p>
+
+        {/* Scroll nudge */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-60 animate-bounce-slow">
+          <span className="text-xs font-black uppercase tracking-widest text-[#862937]">Scroll</span>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-[#862937]">
+            <path d="M10 3v14M4 11l6 6 6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square"/>
+          </svg>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════
+          SECTION 2 — DOCUMENT DROP STAGE (pinned)
+          Documents rain from above, bounce with dust,
+          then scatter away revealing the converter.
+         ══════════════════════════════════════════════ */}
+      <div
+        ref={docDropSectionRef}
+        className="w-full relative bg-[#C4B883] overflow-hidden"
+        style={{ height: "100vh" }}
+        aria-hidden="true"
+      >
+        {/* Dust particle container */}
+        <div
+          ref={dustContainerRef}
+          className="absolute inset-0 pointer-events-none z-30"
+        />
+
+        {/* Label that appears during the effect */}
+        <div className="absolute top-8 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
+          <p className="text-xs md:text-sm font-black uppercase tracking-[0.4em] text-[#862937] opacity-50">
+            Convert any format
+          </p>
+        </div>
+
+        {/* Ground line – documents will settle just above this */}
+        <div className="absolute bottom-[28%] left-0 right-0 h-[2px] bg-[#862937] opacity-20 z-20" />
+
+        {/* Document cards — laid out in a row across centre */}
+        <div className="absolute inset-0 flex items-end justify-center pb-[28%] gap-4 md:gap-6 z-20 px-4">
+          {FALL_DOCS.map((doc, idx) => (
+            <div
+              key={idx}
+              ref={(el) => {
+                docRefs.current[idx] = el;
+              }}
+              className="flex-shrink-0 relative"
+              style={{ width: 112, height: 144 }}
+            >
+              <FloatingDocCard
+                ext={doc.ext}
+                name={doc.name}
+                brandColor={doc.brandColor}
+              />
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* CONVERTER ENGINE SECTION */}
-      <div 
+      {/* ══════════════════════════════════════════════
+          SECTION 3 — CONVERTER ENGINE
+         ══════════════════════════════════════════════ */}
+      <div
         id="converter-section"
-        ref={converterSectionRef} 
+        ref={converterSectionRef}
         className="w-full relative flex-grow flex items-start justify-center py-24 bg-[#B9A071]"
       >
         <Converter />
       </div>
 
-      {/* BRUTALIST FOOTER */}
-      <footer className="w-full border-t-2 border-[#862937] bg-[#C4B883] py-8 relative z-20 text-center text-sm font-black uppercase tracking-widest text-[#862937]">
+      {/* ══════════════════════════════════════════════
+          FOOTER
+         ══════════════════════════════════════════════ */}
+      <footer className="w-full border-t-2 border-[#862937] bg-[#C4B883] py-8 relative z-20 text-sm font-black uppercase tracking-widest text-[#862937]">
         <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="w-8 h-8 bg-[#862937] flex items-center justify-center text-[#C4B883] font-black text-sm uppercase">

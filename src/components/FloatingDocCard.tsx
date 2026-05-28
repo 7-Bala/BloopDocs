@@ -25,7 +25,7 @@ export default function FloatingDocCard({
 
   return (
     <div
-      className={`absolute w-28 h-36 bg-[#C4B883] border-2 border-[#862937] select-none pointer-events-auto transition-brutalist z-10 ${className}`}
+      className={`w-full h-full bg-[#C4B883] border-2 border-[#862937] select-none transition-brutalist z-10 ${className}`}
       style={{
         ...style,
         clipPath: "polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%)",
