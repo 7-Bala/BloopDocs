@@ -64,26 +64,28 @@ export function useDocumentDrop(
     const docs = (docRefs.current || []).filter(Boolean) as HTMLDivElement[];
     if (docs.length === 0) return;
 
-    // Initial state: hide above the clip boundary
-    gsap.set(docs, { yPercent: -500, opacity: 1, rotation: 0, x: 0 });
+    // Force GPU layer promotion on every card for jank-free compositing
+    gsap.set(docs, { yPercent: -500, opacity: 1, rotation: 0, x: 0, force3D: true, willChange: "transform, opacity" });
 
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: outer,
         start: "top top",
         end: "bottom bottom",
-        scrub: 2,
+        scrub: 0.5,            // tight tracking — no visible lag on fast scroll
         invalidateOnRefresh: true,
       },
     });
 
-    // Phase 1 — Fall with bounce
+    // Phase 1 — Fall with smooth deceleration
+    // (bounce.out has direction reversals that look broken at high scrub speeds)
     docs.forEach((doc, i) => {
       tl.to(doc, {
         yPercent: 0,
         rotation: (i % 2 === 0 ? 1 : -1) * (2 + i * 1.5),
         duration: 1,
-        ease: "bounce.out",
+        ease: "power4.out",
+        force3D: true,
       }, i * 0.2);
     });
 
@@ -93,6 +95,7 @@ export function useDocumentDrop(
       yPercent: -8,
       duration: 0.5,
       ease: "sine.inOut",
+      force3D: true,
     }, floatTime);
 
     // Phase 3 — Scatter upward
@@ -105,6 +108,7 @@ export function useDocumentDrop(
         opacity: 0,
         duration: 0.8,
         ease: "power2.in",
+        force3D: true,
       }, scatterTime + i * 0.05);
     });
 
@@ -134,20 +138,22 @@ export function useDocumentDrop(
 }
 
 function burstDust(container: HTMLDivElement, cx: number, cy: number) {
-  for (let i = 0; i < 12; i++) {
+  // 6 particles per card (not 12) — keeps total under 40 concurrent tweens
+  for (let i = 0; i < 6; i++) {
     const el = document.createElement("div");
-    const sz = 2 + Math.random() * 5;
-    el.style.cssText = `position:absolute;left:${cx}px;top:${cy}px;width:${sz}px;height:${sz}px;background:rgba(134,41,55,${0.3 + Math.random() * 0.4});pointer-events:none;z-index:60;`;
+    const sz = 3 + Math.random() * 4;
+    el.style.cssText = `position:absolute;left:${cx}px;top:${cy}px;width:${sz}px;height:${sz}px;background:rgba(134,41,55,${0.35 + Math.random() * 0.35});pointer-events:none;z-index:60;will-change:transform,opacity;`;
     container.appendChild(el);
-    const a = (Math.PI * 2 * i) / 12 + (Math.random() - 0.5);
-    const d = 30 + Math.random() * 70;
+    const a = (Math.PI * 2 * i) / 6 + (Math.random() - 0.5);
+    const d = 35 + Math.random() * 60;
     gsap.to(el, {
       x: Math.cos(a) * d,
       y: Math.sin(a) * d - 20,
       opacity: 0,
       scale: 0.1,
-      duration: 0.5 + Math.random() * 0.4,
+      duration: 0.4 + Math.random() * 0.3,
       ease: "power2.out",
+      force3D: true,
       onComplete: () => el.remove(),
     });
   }
@@ -165,15 +171,16 @@ export function useConverterReveal(ref: RefObject<HTMLDivElement | null>) {
     if (!el) return;
 
     const anim = gsap.fromTo(el,
-      { opacity: 0, y: 100 },
+      { opacity: 0, y: 80, force3D: true },
       {
         opacity: 1, y: 0,
         ease: "power3.out",
+        force3D: true,
         scrollTrigger: {
           trigger: el,
           start: "top 85%",
-          end: "top 45%",
-          scrub: 1,
+          end: "top 50%",
+          scrub: 0.3,          // tight tracking
         },
       }
     );
