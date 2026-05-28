@@ -65,7 +65,10 @@ export default function Home() {
            Outer = 300vh (scroll runway).
            Inner = sticky 100vh panel that stays in viewport while you scroll. -->  */}
       <div ref={outerDropRef} className="relative w-full" style={{ height: "300vh" }}>
-        <div className="sticky top-0 left-0 w-full h-screen overflow-hidden bg-[#C4B883]">
+        <div
+          className="sticky top-0 left-0 w-full h-screen overflow-hidden bg-[#C4B883]"
+          style={{ contain: "layout style paint" }}
+        >
           {/* dust layer */}
           <div ref={dustRef} className="absolute inset-0 pointer-events-none z-30" />
 
@@ -89,7 +92,7 @@ export default function Home() {
                 key={idx}
                 ref={(el) => { docRefs.current[idx] = el; }}
                 className="absolute z-20"
-                style={{ width: 112, height: 144, left: `${pct}%`, bottom: "30%" }}
+                style={{ width: 112, height: 144, left: `${pct}%`, bottom: "30%", willChange: "transform, opacity" }}
               >
                 <FloatingDocCard ext={doc.ext} name={doc.name} brandColor={doc.brandColor} />
               </div>
