@@ -1,7 +1,6 @@
 
 
 <div align="center">
-  <img src="public/logo.png" alt="BloopDocs Logo" width="120" />
   <h1>BloopDocs 📂</h1>
   <p><strong>A high-performance, secure, and completely free document conversion platform built on Next.js 16 and powered by a headless LibreOffice engine.</strong></p>
 
@@ -23,11 +22,11 @@
 Experience an ultra-premium Brutalist design with dynamic HSL color-coded cards and beautiful typography.
 
 <div align="center">
-  <img src="public/screenshot-hero.png" alt="BloopDocs Hero Interface" width="800" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
-  <br/><br/>
-  <img src="public/screenshot-modal.png" alt="BloopDocs Modal View" width="800" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
-  <br/><br/>
   <img src="public/screenshot-full.png" alt="BloopDocs Full Page" width="800" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+  <br/><br/>
+  <img src="public/screenshot.png" alt="BloopDocs Viewport" width="800" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+  <br/><br/>
+  <img src="public/screenshot-hover.png" alt="BloopDocs Hover State" width="800" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
 </div>
 
 ---
