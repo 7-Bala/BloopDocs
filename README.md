@@ -1,12 +1,4 @@
----
-title: BloopDocs
-emoji: 📂
-colorFrom: red
-colorTo: yellow
-sdk: docker
-app_port: 7860
-pinned: false
----
+
 
 <div align="center">
   <img src="public/logo.png" alt="BloopDocs Logo" width="120" />
