@@ -22,11 +22,14 @@
 Experience an ultra-premium Brutalist design with dynamic HSL color-coded cards and beautiful typography.
 
 <div align="center">
-  <img src="public/screenshot-full.png" alt="BloopDocs Full Page" width="800" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+  <h3>The Interface</h3>
+  <img src="public/screenshot-hero.png" alt="BloopDocs Hero" width="800" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
   <br/><br/>
-  <img src="public/screenshot.png" alt="BloopDocs Viewport" width="800" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+  <h3>Conversion Dashboard</h3>
+  <img src="public/screenshot-converter.png" alt="BloopDocs Converter" width="800" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
   <br/><br/>
-  <img src="public/screenshot-hover.png" alt="BloopDocs Hover State" width="800" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+  <h3>Supported Formats</h3>
+  <img src="public/screenshot-modal.png" alt="BloopDocs Modal" width="800" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
 </div>
 
 ---
