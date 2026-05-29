@@ -8,12 +8,35 @@ app_port: 7860
 pinned: false
 ---
 
-# BloopDocs 📂
+<div align="center">
+  <img src="public/logo.png" alt="BloopDocs Logo" width="120" />
+  <h1>BloopDocs 📂</h1>
+  <p><strong>A high-performance, secure, and completely free document conversion platform built on Next.js 16 and powered by a headless LibreOffice engine.</strong></p>
 
-> **BloopDocs** is a high-performance, secure, and completely free document conversion platform built on Next.js 16 and powered by a headless LibreOffice engine. 
+  <a href="https://godrick7-bloopdocs.hf.space">
+    <img src="https://img.shields.io/badge/Live_App-godrick7--bloopdocs.hf.space-blue?style=for-the-badge&logo=vercel" alt="Live App" />
+  </a>
+  <img src="https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js" alt="Next.js" />
+  <img src="https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker" alt="Docker" />
+</div>
 
-### 🌐 Live Production Application
-🌍 **Convert your documents instantly at: [godrick7-bloopdocs.hf.space](https://godrick7-bloopdocs.hf.space)**
+<br />
+
+> 🌍 **Convert your documents instantly at: [godrick7-bloopdocs.hf.space](https://godrick7-bloopdocs.hf.space)**
+
+---
+
+## 📸 Immersive Interface
+
+Experience an ultra-premium Brutalist design with dynamic HSL color-coded cards and beautiful typography.
+
+<div align="center">
+  <img src="public/screenshot-hero.png" alt="BloopDocs Hero Interface" width="800" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+  <br/><br/>
+  <img src="public/screenshot-modal.png" alt="BloopDocs Modal View" width="800" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+  <br/><br/>
+  <img src="public/screenshot-full.png" alt="BloopDocs Full Page" width="800" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+</div>
 
 ---
 
@@ -29,10 +52,12 @@ pinned: false
 
 ## 🛠️ Technology Stack
 
-- **Framework**: Next.js 16 (Turbopack) & React 19
-- **Aesthetics & Motion**: Tailwind CSS v4, Vanilla CSS, GSAP (GreenSock Animation Platform), Canvas Confetti, and custom SVG vectors
-- **Backend Processor**: Headless LibreOffice (`soffice` v20+)
-- **Packaging**: Docker, Bullseye Linux, JSZip
+| Category | Technology |
+|---|---|
+| **Framework** | Next.js 16 (Turbopack) & React 19 |
+| **Aesthetics & Motion** | Tailwind CSS v4, Vanilla CSS, GSAP, Canvas Confetti, Custom SVGs |
+| **Backend Processor** | Headless LibreOffice (`soffice` v20+) |
+| **Packaging** | Docker, Bullseye Linux, JSZip |
 
 ---
 
@@ -95,5 +120,6 @@ docker run -p 7860:7860 bloopdocs
 ---
 
 ### 💖 Developed by think2thrive
-Designed with passion to make document utilities beautiful, responsive, and completely accessible to everyone without paid subscriptions.
-
+<p align="center">
+  <i>Designed with passion to make document utilities beautiful, responsive, and completely accessible to everyone without paid subscriptions.</i>
+</p>
